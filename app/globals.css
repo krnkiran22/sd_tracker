@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --font-sans: var(--font-ui), "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+}
+
+:root {
+  --radius: 0px;
+
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0 0);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0 0);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+
+  --primary: oklch(0.15 0 0);
+  --primary-foreground: oklch(0.98 0 0);
+
+  --secondary: oklch(0.92 0.01 210);
+  --secondary-foreground: oklch(0.22 0.01 210);
+
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+
+  --accent: oklch(0.94 0 0);
+  --accent-foreground: oklch(0.15 0 0);
+
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: oklch(0.98 0.01 27);
+
+  --border: oklch(0.90 0 0);
+  --input: oklch(0.90 0 0);
+  --ring: oklch(0.15 0 0);
+
+  --chart-1: oklch(0.30 0 0);
+  --chart-2: oklch(0.65 0.15 145);
+  --chart-3: oklch(0.70 0.15 75);
+  --chart-4: oklch(0.62 0.18 25);
+  --chart-5: oklch(0.58 0.15 270);
+
+  --success: oklch(0.60 0.18 145);
+  --success-foreground: oklch(0.25 0.05 145);
+  --success-muted: oklch(0.96 0.03 145);
+
+  --warning: oklch(0.70 0.15 75);
+  --warning-foreground: oklch(0.35 0.08 75);
+  --warning-muted: oklch(0.96 0.03 75);
+
+  --error: oklch(0.62 0.18 25);
+  --error-foreground: oklch(0.30 0.08 25);
+  --error-muted: oklch(0.96 0.03 25);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .text-label {
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.35s ease-out backwards;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.35s ease-out backwards;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
