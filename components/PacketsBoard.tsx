@@ -82,7 +82,7 @@ export default function PacketsBoard({ refreshTrigger }: PacketsBoardProps) {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border text-left">
-                  {['#', 'Team', 'Factory', 'Date Received', 'SD Cards', 'Entered By', 'POC Emails', 'Status'].map(h => (
+                  {['#', 'Team', 'Factory', 'Date Received', 'SD Cards', 'Entered By', 'POC Emails', 'Photo', 'Status'].map(h => (
                     <th key={h} className="pb-2 pr-4 font-semibold text-muted-foreground whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -102,6 +102,16 @@ export default function PacketsBoard({ refreshTrigger }: PacketsBoardProps) {
                         <span className="text-muted-foreground truncate block" title={p.poc_emails}>
                           {p.poc_emails || '—'}
                         </span>
+                      </td>
+                      <td className="py-2 pr-4">
+                        {p.photo_url ? (
+                          <img src={p.photo_url} alt="pkg"
+                            className="h-8 w-8 object-cover border border-border rounded cursor-pointer"
+                            onClick={() => window.open(p.photo_url!, '_blank')}
+                            title="Click to view full photo" />
+                        ) : (
+                          <span className="text-muted-foreground text-[10px]">—</span>
+                        )}
                       </td>
                       <td className="py-2">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold border rounded-full ${cfg.color} ${cfg.bg}`}>

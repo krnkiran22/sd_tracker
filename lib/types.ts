@@ -9,6 +9,7 @@ export interface SdPacket {
   date_received: string
   sd_card_count: number
   notes?: string
+  photo_url?: string | null
   status: PacketStatus
   entered_by: string
   poc_emails: string

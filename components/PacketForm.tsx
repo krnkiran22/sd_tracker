@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Package, Plus, X } from 'lucide-react'
+import { Package, Plus, X, Camera, ImageIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +9,32 @@ import { useAuth } from '@/components/AuthProvider'
 import { apiUrl } from '@/lib/api'
 
 interface PacketFormProps { onSuccess: () => void }
+
+// Compress photo to max 1200px, JPEG 0.82 quality — keeps it under ~200KB
+function compressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const img = new Image()
+      img.onload = () => {
+        const MAX = 1200
+        let { width, height } = img
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round((height * MAX) / width); width = MAX }
+          else { width = Math.round((width * MAX) / height); height = MAX }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', 0.82))
+      }
+      img.onerror = reject
+      img.src = ev.target?.result as string
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
 
 export default function PacketForm({ onSuccess }: PacketFormProps) {
   const { user } = useAuth()
@@ -23,12 +49,18 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
   const [dateReceived, setDateReceived] = useState(new Date().toISOString().slice(0, 10))
   const [sdCardCount, setSdCardCount]   = useState('')
   const [notes, setNotes]               = useState('')
-  const [pocEmails, setPocEmails]       = useState('')  // comma-separated
+  const [pocEmails, setPocEmails]       = useState('')
   const [pocInput, setPocInput]         = useState('')
 
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState('')
-  const [success, setSuccess]   = useState(false)
+  // Photo state
+  const [photo, setPhoto]         = useState<string | null>(null)
+  const [photoName, setPhotoName] = useState('')
+  const cameraRef  = useRef<HTMLInputElement>(null)
+  const galleryRef = useRef<HTMLInputElement>(null)
+
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState('')
+  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
     fetch(apiUrl('/api/teams')).then(r => r.json()).then(d => {
@@ -51,22 +83,31 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const compressed = await compressImage(file)
+      setPhoto(compressed)
+      setPhotoName(file.name)
+    } catch {
+      setPhoto(URL.createObjectURL(file))
+      setPhotoName(file.name)
+    }
+    e.target.value = ''
+  }
+
   const emailList = pocEmails ? pocEmails.split(',').map(e => e.trim()).filter(Boolean) : []
 
   const addEmail = () => {
     const e = pocInput.trim()
     if (!e) return
-    const current = emailList
-    if (!current.includes(e)) {
-      const updated = [...current, e].join(', ')
-      setPocEmails(updated)
-    }
+    if (!emailList.includes(e)) setPocEmails([...emailList, e].join(', '))
     setPocInput('')
   }
 
   const removeEmail = (email: string) => {
-    const updated = emailList.filter(e => e !== email).join(', ')
-    setPocEmails(updated)
+    setPocEmails(emailList.filter(e => e !== email).join(', '))
   }
 
   const handleSubmit = async (ev: React.FormEvent) => {
@@ -87,13 +128,17 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
           date_received: dateReceived,
           sd_card_count: Number(sdCardCount),
           notes:         notes.trim() || null,
+          photo_url:     photo,
           entered_by:    user?.name ?? 'Logistics',
           poc_emails:    pocEmails,
         }),
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error) }
 
-      setTeamInput(''); setFactory(''); setSdCardCount(''); setNotes(''); setPocEmails(''); setPocInput('')
+      // Reset form
+      setTeamInput(''); setFactory(''); setSdCardCount('')
+      setNotes(''); setPocEmails(''); setPocInput('')
+      setPhoto(null); setPhotoName('')
       setSuccess(true); setTimeout(() => setSuccess(false), 4000)
       onSuccess()
     } catch (err: any) {
@@ -160,6 +205,50 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
             </div>
           </div>
 
+          {/* Package Photo */}
+          <div>
+            <label className="text-label block mb-1">
+              Package Photo
+              <span className="ml-1 text-muted-foreground font-normal">(sent in email to POCs)</span>
+            </label>
+
+            {/* Hidden file inputs */}
+            <input ref={cameraRef}  type="file" accept="image/*" capture="environment"
+              className="hidden" onChange={handleFileChange} />
+            <input ref={galleryRef} type="file" accept="image/*"
+              className="hidden" onChange={handleFileChange} />
+
+            {photo ? (
+              <div className="border border-blue-300 bg-blue-50/60 p-3 flex items-start gap-3 rounded">
+                <img src={photo} alt="package preview"
+                  className="h-20 w-20 object-cover border border-border rounded flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold text-blue-800">✓ Photo attached</p>
+                  <p className="text-[10px] text-muted-foreground truncate mt-0.5">{photoName}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    This photo will be embedded in the notification email to the team POCs.
+                  </p>
+                  <button type="button"
+                    onClick={() => { setPhoto(null); setPhotoName('') }}
+                    className="mt-1.5 text-[10px] text-red-600 hover:underline flex items-center gap-1">
+                    <X size={10} /> Remove photo
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" className="flex-1 gap-1.5"
+                  onClick={() => cameraRef.current?.click()}>
+                  <Camera size={12} /> Take Photo
+                </Button>
+                <Button type="button" variant="outline" size="sm" className="flex-1 gap-1.5"
+                  onClick={() => galleryRef.current?.click()}>
+                  <ImageIcon size={12} /> Choose from Gallery
+                </Button>
+              </div>
+            )}
+          </div>
+
           {/* POC Emails */}
           <div>
             <label className="text-label block mb-1">Team POC Emails</label>
@@ -190,7 +279,7 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
               </div>
             )}
             <p className="text-[10px] text-muted-foreground mt-1">
-              An email notification will be sent to these addresses upon submission.
+              Notification email (with photo) will be sent to these addresses on submit.
             </p>
           </div>
 
@@ -203,11 +292,12 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
           {error   && <p className="text-[10px] text-destructive">{error}</p>}
           {success && (
             <p className="text-[10px] text-green-600 font-medium">
-              ✓ Packet logged successfully. Notification email sent to POCs.
+              ✓ Packet logged. Notification email{photo ? ' with photo' : ''} sent to POCs.
             </p>
           )}
 
-          <Button type="submit" disabled={loading} className="w-full sm:w-auto sm:self-start gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+          <Button type="submit" disabled={loading}
+            className="w-full sm:w-auto sm:self-start gap-2 bg-blue-600 hover:bg-blue-700 text-white">
             <Package size={12} />
             {loading ? 'Logging…' : 'Log Received Packet'}
           </Button>
