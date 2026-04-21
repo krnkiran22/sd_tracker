@@ -2,73 +2,257 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Mail, KeyRound, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { USERS, storeAuth } from '@/lib/auth'
+import { Card, CardContent } from '@/components/ui/card'
+import { storeAuth } from '@/lib/auth'
+import { apiUrl } from '@/lib/api'
+
+type Step = 'email' | 'otp' | 'password'
 
 export default function LoginPage() {
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
   const router = useRouter()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [step, setStep]         = useState<Step>('email')
+  const [email, setEmail]       = useState('')
+  const [otp, setOtp]           = useState('')
+  const [password, setPassword] = useState('')
+  const [showPass, setShowPass] = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
+  const [info, setInfo]         = useState('')
+
+  // ── Step 1: submit email ──────────────────────────────────────────────────
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    if (!email.trim()) { setError('Please enter your email.'); return }
     setLoading(true)
-    setTimeout(() => {
-      const match = USERS.find(
-        u => u.email === email.trim().toLowerCase() && u.password === password
-      )
-      if (match) {
-        storeAuth({ email: match.email, role: match.role, name: match.name })
-        router.replace('/')
+    try {
+      const res = await fetch(apiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Something went wrong.'); return }
+
+      if (data.type === 'otp') {
+        setInfo(data.message || 'OTP sent to your email.')
+        setStep('otp')
       } else {
-        setError('Invalid email or password.')
-        setLoading(false)
+        setStep('password')
       }
-    }, 400)
+    } catch {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Step 2a: verify OTP ───────────────────────────────────────────────────
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    if (otp.trim().length !== 6) { setError('Enter the 6-digit code.'); return }
+    setLoading(true)
+    try {
+      const res = await fetch(apiUrl('/api/auth/verify-otp'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), otp: otp.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Invalid code.'); return }
+      storeAuth(data.user)
+      router.replace('/')
+    } catch {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Step 2b: verify password (admin accounts) ─────────────────────────────
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    if (!password) { setError('Please enter your password.'); return }
+    setLoading(true)
+    try {
+      const res = await fetch(apiUrl('/api/auth/verify-password'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Invalid credentials.'); return }
+      storeAuth(data.user)
+      router.replace('/')
+    } catch {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const resendOtp = async () => {
+    setError(''); setInfo(''); setLoading(true)
+    try {
+      const res = await fetch(apiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+      const data = await res.json()
+      if (res.ok) setInfo('New code sent to your email.')
+      else setError(data.error || 'Failed to resend.')
+    } catch {
+      setError('Network error.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <div className="text-xs font-semibold tracking-tight mb-1">SD Card Tracker</div>
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Sign in to continue</div>
+
+        {/* Logo / Brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-foreground rounded-xl mb-4">
+            <span className="text-background text-lg font-bold">B</span>
+          </div>
+          <h1 className="text-xl font-semibold tracking-tight">Build AI Tracker</h1>
+          <p className="text-xs text-muted-foreground mt-1">SD Card Ingestion & Logistics</p>
         </div>
 
-        <form onSubmit={handleLogin} className="border border-border bg-card p-6 flex flex-col gap-4">
-          <div>
-            <label className="text-label block mb-1">Email</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              autoComplete="email"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-label block mb-1">Password</label>
-            <Input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-            />
-          </div>
+        <Card className="gap-0 py-0">
+          <CardContent className="py-6 px-6">
 
-          {error && <p className="text-[10px] text-destructive">{error}</p>}
+            {/* ── STEP: Email ─────────────────────────────────────────────── */}
+            {step === 'email' && (
+              <form onSubmit={handleEmailSubmit} className="flex flex-col gap-4">
+                <div>
+                  <h2 className="text-sm font-semibold mb-1">Sign in</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Enter your email to receive a login code, or sign in with your password.
+                  </p>
+                </div>
+                <div>
+                  <label className="text-label block mb-1">Email address</label>
+                  <div className="relative">
+                    <Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="you@company.com"
+                      className="pl-8"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                {error && <p className="text-[10px] text-destructive">{error}</p>}
+                <Button type="submit" disabled={loading} className="w-full gap-2">
+                  {loading ? <Loader2 size={13} className="animate-spin" /> : <ArrowRight size={13} />}
+                  {loading ? 'Checking…' : 'Continue'}
+                </Button>
+                <p className="text-center text-[10px] text-muted-foreground">
+                  No account?{' '}
+                  <Link href="/signup" className="text-foreground font-semibold hover:underline">
+                    Sign up
+                  </Link>
+                </p>
+              </form>
+            )}
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Signing in…' : 'Sign In'}
-          </Button>
-        </form>
+            {/* ── STEP: OTP ───────────────────────────────────────────────── */}
+            {step === 'otp' && (
+              <form onSubmit={handleOtpSubmit} className="flex flex-col gap-4">
+                <div>
+                  <h2 className="text-sm font-semibold mb-1">Enter verification code</h2>
+                  <p className="text-xs text-muted-foreground">
+                    We sent a 6-digit code to <strong>{email}</strong>. It expires in 10 minutes.
+                  </p>
+                </div>
+                {info && <p className="text-[10px] text-green-600 font-medium">{info}</p>}
+                <div>
+                  <label className="text-label block mb-1">6-digit code</label>
+                  <div className="relative">
+                    <KeyRound size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={otp}
+                      onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="000000"
+                      className="pl-8 text-center tracking-[0.5em] font-mono text-lg"
+                      maxLength={6}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                {error && <p className="text-[10px] text-destructive">{error}</p>}
+                <Button type="submit" disabled={loading || otp.length !== 6} className="w-full gap-2">
+                  {loading ? <Loader2 size={13} className="animate-spin" /> : <KeyRound size={13} />}
+                  {loading ? 'Verifying…' : 'Verify & Sign In'}
+                </Button>
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                  <button type="button" onClick={() => { setStep('email'); setOtp(''); setError('') }}
+                    className="hover:text-foreground hover:underline">
+                    ← Change email
+                  </button>
+                  <button type="button" onClick={resendOtp} disabled={loading}
+                    className="hover:text-foreground hover:underline disabled:opacity-50">
+                    Resend code
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* ── STEP: Password (admin) ───────────────────────────────────── */}
+            {step === 'password' && (
+              <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
+                <div>
+                  <h2 className="text-sm font-semibold mb-1">Enter your password</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Signing in as <strong>{email}</strong>
+                  </p>
+                </div>
+                <div>
+                  <label className="text-label block mb-1">Password</label>
+                  <div className="relative">
+                    <Input
+                      type={showPass ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="Enter password"
+                      className="pr-9"
+                      autoFocus
+                    />
+                    <button type="button"
+                      onClick={() => setShowPass(v => !v)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showPass ? <EyeOff size={13} /> : <Eye size={13} />}
+                    </button>
+                  </div>
+                </div>
+                {error && <p className="text-[10px] text-destructive">{error}</p>}
+                <Button type="submit" disabled={loading} className="w-full gap-2">
+                  {loading ? <Loader2 size={13} className="animate-spin" /> : <ArrowRight size={13} />}
+                  {loading ? 'Signing in…' : 'Sign In'}
+                </Button>
+                <button type="button" onClick={() => { setStep('email'); setPassword(''); setError('') }}
+                  className="text-[10px] text-muted-foreground hover:text-foreground hover:underline text-center">
+                  ← Use a different email
+                </button>
+              </form>
+            )}
+
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   )
