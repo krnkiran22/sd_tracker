@@ -3,26 +3,24 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, KeyRound, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Mail, KeyRound, ArrowRight, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { storeAuth } from '@/lib/auth'
 import { apiUrl } from '@/lib/api'
 
-type Step = 'email' | 'otp' | 'password'
+type Step = 'email' | 'otp'
 
 export default function LoginPage() {
   const router = useRouter()
 
-  const [step, setStep]         = useState<Step>('email')
-  const [email, setEmail]       = useState('')
-  const [otp, setOtp]           = useState('')
-  const [password, setPassword] = useState('')
-  const [showPass, setShowPass] = useState(false)
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState('')
-  const [info, setInfo]         = useState('')
+  const [step, setStep]   = useState<Step>('email')
+  const [email, setEmail] = useState('')
+  const [otp, setOtp]     = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError]   = useState('')
+  const [info, setInfo]     = useState('')
 
   // ── Step 1: submit email ──────────────────────────────────────────────────
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -38,13 +36,8 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Something went wrong.'); return }
-
-      if (data.type === 'otp') {
-        setInfo(data.message || 'OTP sent to your email.')
-        setStep('otp')
-      } else {
-        setStep('password')
-      }
+      setInfo(data.message || 'OTP sent to your email.')
+      setStep('otp')
     } catch {
       setError('Network error. Please try again.')
     } finally {
@@ -52,7 +45,7 @@ export default function LoginPage() {
     }
   }
 
-  // ── Step 2a: verify OTP ───────────────────────────────────────────────────
+  // ── Step 2: verify OTP ────────────────────────────────────────────────────
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -66,29 +59,6 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Invalid code.'); return }
-      storeAuth(data.user)
-      router.replace('/')
-    } catch {
-      setError('Network error. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // ── Step 2b: verify password (admin accounts) ─────────────────────────────
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    if (!password) { setError('Please enter your password.'); return }
-    setLoading(true)
-    try {
-      const res = await fetch(apiUrl('/api/auth/verify-password'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
-      })
-      const data = await res.json()
-      if (!res.ok) { setError(data.error || 'Invalid credentials.'); return }
       storeAuth(data.user)
       router.replace('/')
     } catch {
@@ -126,7 +96,7 @@ export default function LoginPage() {
             <span className="text-background text-lg font-bold">B</span>
           </div>
           <h1 className="text-xl font-semibold tracking-tight">Build AI Tracker</h1>
-          <p className="text-xs text-muted-foreground mt-1">SD Card Ingestion & Logistics</p>
+          <p className="text-xs text-muted-foreground mt-1">SD Card Ingestion &amp; Logistics</p>
         </div>
 
         <Card className="gap-0 py-0">
@@ -138,7 +108,7 @@ export default function LoginPage() {
                 <div>
                   <h2 className="text-sm font-semibold mb-1">Sign in</h2>
                   <p className="text-xs text-muted-foreground">
-                    Enter your email to receive a login code, or sign in with your password.
+                    Enter your email to receive a one-time login code.
                   </p>
                 </div>
                 <div>
@@ -158,7 +128,7 @@ export default function LoginPage() {
                 {error && <p className="text-[10px] text-destructive">{error}</p>}
                 <Button type="submit" disabled={loading} className="w-full gap-2">
                   {loading ? <Loader2 size={13} className="animate-spin" /> : <ArrowRight size={13} />}
-                  {loading ? 'Checking…' : 'Continue'}
+                  {loading ? 'Checking…' : 'Send Code'}
                 </Button>
                 <p className="text-center text-[10px] text-muted-foreground">
                   No account?{' '}
@@ -208,45 +178,6 @@ export default function LoginPage() {
                     Resend code
                   </button>
                 </div>
-              </form>
-            )}
-
-            {/* ── STEP: Password (admin) ───────────────────────────────────── */}
-            {step === 'password' && (
-              <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
-                <div>
-                  <h2 className="text-sm font-semibold mb-1">Enter your password</h2>
-                  <p className="text-xs text-muted-foreground">
-                    Signing in as <strong>{email}</strong>
-                  </p>
-                </div>
-                <div>
-                  <label className="text-label block mb-1">Password</label>
-                  <div className="relative">
-                    <Input
-                      type={showPass ? 'text' : 'password'}
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="Enter password"
-                      className="pr-9"
-                      autoFocus
-                    />
-                    <button type="button"
-                      onClick={() => setShowPass(v => !v)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      {showPass ? <EyeOff size={13} /> : <Eye size={13} />}
-                    </button>
-                  </div>
-                </div>
-                {error && <p className="text-[10px] text-destructive">{error}</p>}
-                <Button type="submit" disabled={loading} className="w-full gap-2">
-                  {loading ? <Loader2 size={13} className="animate-spin" /> : <ArrowRight size={13} />}
-                  {loading ? 'Signing in…' : 'Sign In'}
-                </Button>
-                <button type="button" onClick={() => { setStep('email'); setPassword(''); setError('') }}
-                  className="text-[10px] text-muted-foreground hover:text-foreground hover:underline text-center">
-                  ← Use a different email
-                </button>
               </form>
             )}
 
