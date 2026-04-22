@@ -104,14 +104,25 @@ export default function PacketsBoard({ refreshTrigger }: PacketsBoardProps) {
                         </span>
                       </td>
                       <td className="py-2 pr-4">
-                        {p.photo_url ? (
-                          <img src={p.photo_url} alt="pkg"
-                            className="h-8 w-8 object-cover border border-border rounded cursor-pointer"
-                            onClick={() => window.open(p.photo_url!, '_blank')}
-                            title="Click to view full photo" />
-                        ) : (
-                          <span className="text-muted-foreground text-[10px]">—</span>
-                        )}
+                        {(() => {
+                          const urls: string[] = []
+                          if (p.photo_urls) {
+                            try { urls.push(...JSON.parse(p.photo_urls)) } catch { /* ignore */ }
+                          } else if (p.photo_url) {
+                            urls.push(p.photo_url)
+                          }
+                          if (!urls.length) return <span className="text-muted-foreground text-[10px]">—</span>
+                          return (
+                            <div className="flex gap-1 flex-wrap">
+                              {urls.map((src, i) => (
+                                <img key={i} src={src} alt={`pkg ${i + 1}`}
+                                  className="h-8 w-8 object-cover border border-border rounded cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={() => { const w = window.open(); w?.document.write(`<img src="${src}" style="max-width:100%">`) }}
+                                  title={`Photo ${i + 1} — click to view`} />
+                              ))}
+                            </div>
+                          )
+                        })()}
                       </td>
                       <td className="py-2">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold border rounded-full ${cfg.color} ${cfg.bg}`}>

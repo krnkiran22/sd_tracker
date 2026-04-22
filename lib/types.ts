@@ -10,6 +10,7 @@ export interface SdPacket {
   sd_card_count: number
   notes?: string
   photo_url?: string | null
+  photo_urls?: string | null  // JSON array of data-URL strings
   status: PacketStatus
   entered_by: string
   poc_emails: string
