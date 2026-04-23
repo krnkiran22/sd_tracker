@@ -17,7 +17,8 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const pathname = usePathname()
 
   useEffect(() => {
-    if (pathname === '/login' || pathname === '/signup') { setReady(true); return }
+    const publicPaths = ['/login', '/signup', '/packing-guide', '/docs']
+    if (publicPaths.some(p => pathname === p || pathname.startsWith(p + '/'))) { setReady(true); return }
     const stored = getStoredAuth()
     if (!stored) {
       router.replace('/login')
