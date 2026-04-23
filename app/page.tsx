@@ -13,6 +13,7 @@ import RecordsTable from '@/components/RecordsTable'
 import PacketForm from '@/components/PacketForm'
 import PacketsBoard from '@/components/PacketsBoard'
 import IngestionDashboard from '@/components/IngestionDashboard'
+import AdminPanel from '@/components/AdminPanel'
 import { SentReturnedByTeam } from '@/components/charts/SentReturnedByTeam'
 import { CirculationTimeline } from '@/components/charts/CirculationTimeline'
 import type { Transaction } from '@/lib/items'
@@ -215,6 +216,17 @@ export default function Dashboard() {
                 <span className="text-[10px] text-muted-foreground ml-auto hidden group-open:inline">▾ collapse</span>
               </summary>
               <IngestionDashboard />
+            </details>
+
+            {/* Admin CRUD panel */}
+            <details className="group">
+              <summary className="cursor-pointer flex items-center gap-2 mb-3 list-none">
+                <span className="text-xs font-semibold">Admin Panel</span>
+                <Badge variant="outline" className="text-red-700 border-red-300 bg-red-50 text-[10px]">CRUD</Badge>
+                <span className="text-[10px] text-muted-foreground ml-auto group-open:hidden">▸ expand</span>
+                <span className="text-[10px] text-muted-foreground ml-auto hidden group-open:inline">▾ collapse</span>
+              </summary>
+              <AdminPanel />
             </details>
           </>
         )}
