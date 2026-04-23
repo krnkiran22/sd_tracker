@@ -258,7 +258,7 @@ function TeamsAdmin() {
   const [rows, setRows]       = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<string | null>(null)
-  const [draft, setDraft]     = useState<Team>({ name: '', poc_emails: '' })
+  const [draft, setDraft]     = useState<Team>({ name: '', poc_emails: '', poc_phones: '' })
   const [saving, setSaving]   = useState(false)
   const [newRow, setNewRow]   = useState(false)
   const [newDraft, setNewDraft] = useState<Team>({ name: '', poc_emails: '', poc_phones: '' })
@@ -300,7 +300,7 @@ function TeamsAdmin() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newDraft),
       })
-      setNewRow(false); setNewDraft({ name: '', poc_emails: '' })
+      setNewRow(false); setNewDraft({ name: '', poc_emails: '', poc_phones: '' })
       await load()
     } finally { setSaving(false) }
   }
