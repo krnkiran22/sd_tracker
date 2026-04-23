@@ -10,7 +10,7 @@ import { apiUrl } from '@/lib/api'
 
 interface PacketFormProps { onSuccess: () => void }
 
-interface TeamInfo { name: string; poc_emails: string }
+interface TeamInfo { name: string; poc_emails: string; poc_phones: string }
 
 // Compress photo to max 1200px, JPEG 0.82 quality — keeps it under ~200KB
 function compressImage(file: File): Promise<string> {
@@ -54,6 +54,8 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
   const [notes, setNotes]               = useState('')
   const [pocEmails, setPocEmails]       = useState('')
   const [pocInput, setPocInput]         = useState('')
+  const [pocPhones, setPocPhones]       = useState('')
+  const [phoneInput, setPhoneInput]     = useState('')
 
   // Multiple photos
   const [photos, setPhotos]           = useState<string[]>([])
@@ -89,12 +91,15 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
   const selectTeam = (team: TeamInfo) => {
     setTeamInput(team.name)
     setShowDropdown(false)
-    // Auto-fill emails from the team's saved emails
     if (team.poc_emails) {
       const incoming = team.poc_emails.split(',').map(e => e.trim()).filter(Boolean)
       const current  = pocEmails ? pocEmails.split(',').map(e => e.trim()).filter(Boolean) : []
-      const merged   = Array.from(new Set([...current, ...incoming]))
-      setPocEmails(merged.join(', '))
+      setPocEmails(Array.from(new Set([...current, ...incoming])).join(', '))
+    }
+    if (team.poc_phones) {
+      const incoming = team.poc_phones.split(',').map(p => p.trim()).filter(Boolean)
+      const current  = pocPhones ? pocPhones.split(',').map(p => p.trim()).filter(Boolean) : []
+      setPocPhones(Array.from(new Set([...current, ...incoming])).join(', '))
     }
   }
 
@@ -111,6 +116,7 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
   const removePhoto = (idx: number) => setPhotos(prev => prev.filter((_, i) => i !== idx))
 
   const emailList = pocEmails ? pocEmails.split(',').map(e => e.trim()).filter(Boolean) : []
+  const phoneList = pocPhones ? pocPhones.split(',').map(p => p.trim()).filter(Boolean) : []
 
   const addEmail = () => {
     const e = pocInput.trim()
@@ -118,10 +124,15 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
     if (!emailList.includes(e)) setPocEmails([...emailList, e].join(', '))
     setPocInput('')
   }
+  const removeEmail = (email: string) => setPocEmails(emailList.filter(e => e !== email).join(', '))
 
-  const removeEmail = (email: string) => {
-    setPocEmails(emailList.filter(e => e !== email).join(', '))
+  const addPhone = () => {
+    const p = phoneInput.trim()
+    if (!p) return
+    if (!phoneList.includes(p)) setPocPhones([...phoneList, p].join(', '))
+    setPhoneInput('')
   }
+  const removePhone = (phone: string) => setPocPhones(phoneList.filter(p => p !== phone).join(', '))
 
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault()
@@ -145,13 +156,14 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
           photo_urls:    photos.length ? JSON.stringify(photos) : null,
           entered_by:    user?.name ?? 'Logistics',
           poc_emails:    pocEmails,
+          poc_phones:    pocPhones,
         }),
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error) }
 
       // Reset
       setTeamInput(''); setFactory(''); setSdCardCount('')
-      setNotes(''); setPocEmails(''); setPocInput('')
+      setNotes(''); setPocEmails(''); setPocInput(''); setPocPhones(''); setPhoneInput('')
       setPhotos([])
       setSuccess(true); setTimeout(() => setSuccess(false), 4000)
       onSuccess()
@@ -194,7 +206,12 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
                       <span className="font-medium">{s.name}</span>
                       {s.poc_emails && (
                         <span className="block text-muted-foreground text-[10px] truncate mt-0.5">
-                          {s.poc_emails}
+                          ✉ {s.poc_emails}
+                        </span>
+                      )}
+                      {s.poc_phones && (
+                        <span className="block text-green-700 text-[10px] truncate mt-0.5">
+                          📱 {s.poc_phones}
                         </span>
                       )}
                     </button>
@@ -305,6 +322,43 @@ export default function PacketForm({ onSuccess }: PacketFormProps) {
             <p className="text-[10px] text-muted-foreground mt-1">
               Notification email (with photos) will be sent to these addresses on submit.
               Emails are saved per team for next time.
+            </p>
+          </div>
+
+          {/* WhatsApp Phones */}
+          <div>
+            <label className="text-label block mb-1">
+              WhatsApp Numbers
+              <span className="ml-1 text-muted-foreground font-normal">(auto-filled when team is selected)</span>
+            </label>
+            <div className="flex gap-2">
+              <Input
+                type="tel"
+                value={phoneInput}
+                onChange={e => setPhoneInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addPhone() } }}
+                placeholder="+919876543210 — press Enter to add"
+              />
+              <Button type="button" variant="outline" size="sm" onClick={addPhone} className="shrink-0">
+                <Plus size={12} />
+              </Button>
+            </div>
+            {phoneList.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {phoneList.map(phone => (
+                  <span key={phone}
+                    className="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] px-2 py-0.5 rounded-full font-medium">
+                    {phone}
+                    <button type="button" onClick={() => removePhone(phone)}
+                      className="hover:text-red-600 transition-colors ml-0.5">
+                      <X size={10} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="text-[10px] text-muted-foreground mt-1">
+              WhatsApp notification sent to these numbers at each stage. Numbers saved per team.
             </p>
           </div>
 

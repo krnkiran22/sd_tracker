@@ -11,7 +11,7 @@ import type { SdPacket, IngestionRecord } from '@/lib/types'
 
 type Tab = 'packets' | 'ingestion' | 'teams' | 'users'
 
-interface Team { name: string; poc_emails: string }
+interface Team { name: string; poc_emails: string; poc_phones: string }
 interface AppUser { id: number; name: string; email: string; role: string; is_verified: boolean; created_at: string }
 
 function fmt(d: string) {
@@ -261,7 +261,7 @@ function TeamsAdmin() {
   const [draft, setDraft]     = useState<Team>({ name: '', poc_emails: '' })
   const [saving, setSaving]   = useState(false)
   const [newRow, setNewRow]   = useState(false)
-  const [newDraft, setNewDraft] = useState<Team>({ name: '', poc_emails: '' })
+  const [newDraft, setNewDraft] = useState<Team>({ name: '', poc_emails: '', poc_phones: '' })
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -319,13 +319,16 @@ function TeamsAdmin() {
       </div>
 
       {newRow && (
-        <div className="flex gap-2 mb-3 p-2 bg-blue-50/50 border border-blue-200 rounded items-center">
+        <div className="flex gap-2 mb-3 p-2 bg-blue-50/50 border border-blue-200 rounded items-center flex-wrap">
           <Input placeholder="Team name" value={newDraft.name}
             onChange={e => setNewDraft(d => ({ ...d, name: e.target.value }))}
-            className="h-7 text-[11px] flex-1" />
+            className="h-7 text-[11px] flex-1 min-w-[120px]" />
           <Input placeholder="POC emails (comma-separated)" value={newDraft.poc_emails}
             onChange={e => setNewDraft(d => ({ ...d, poc_emails: e.target.value }))}
-            className="h-7 text-[11px] flex-[2]" />
+            className="h-7 text-[11px] flex-[2] min-w-[160px]" />
+          <Input placeholder="WhatsApp numbers e.g. +919876543210" value={newDraft.poc_phones}
+            onChange={e => setNewDraft(d => ({ ...d, poc_phones: e.target.value }))}
+            className="h-7 text-[11px] flex-[2] min-w-[160px]" />
           <Button size="sm" onClick={addNew} disabled={saving} className="h-7 text-[11px]">Save</Button>
           <Button size="sm" variant="ghost" onClick={() => setNewRow(false)} className="h-7 text-[11px]">Cancel</Button>
         </div>
@@ -334,7 +337,7 @@ function TeamsAdmin() {
       <table className="w-full text-[11px]">
         <thead>
           <tr className="border-b border-border text-left text-muted-foreground">
-            {['Team Name', 'POC Emails (auto-fill)', ''].map(h => (
+            {['Team Name', 'POC Emails', 'WhatsApp Numbers', ''].map(h => (
               <th key={h} className="pb-2 pr-4 font-semibold">{h}</th>
             ))}
           </tr>
@@ -349,10 +352,15 @@ function TeamsAdmin() {
                     ? <Input value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} className="h-6 text-[11px] px-1.5 py-0 w-48" />
                     : <span className="font-medium">{row.name}</span>}
                 </td>
+                <td className="py-1.5 pr-4">
+                  {isEditing
+                    ? <Input value={draft.poc_emails} onChange={e => setDraft(d => ({ ...d, poc_emails: e.target.value }))} className="h-6 text-[11px] px-1.5 py-0 w-48" placeholder="email1@x.com, email2@x.com" />
+                    : <span className="text-muted-foreground">{row.poc_emails || '—'}</span>}
+                </td>
                 <td className="py-1.5 pr-4 w-full">
                   {isEditing
-                    ? <Input value={draft.poc_emails} onChange={e => setDraft(d => ({ ...d, poc_emails: e.target.value }))} className="h-6 text-[11px] px-1.5 py-0 w-full" placeholder="email1@x.com, email2@x.com" />
-                    : <span className="text-muted-foreground">{row.poc_emails || '—'}</span>}
+                    ? <Input value={draft.poc_phones} onChange={e => setDraft(d => ({ ...d, poc_phones: e.target.value }))} className="h-6 text-[11px] px-1.5 py-0 w-full" placeholder="+919876543210, +918765432109" />
+                    : <span className="text-green-700">{row.poc_phones || '—'}</span>}
                 </td>
                 <td className="py-1.5">
                   {isEditing ? (
