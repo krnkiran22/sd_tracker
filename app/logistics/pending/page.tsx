@@ -133,8 +133,9 @@ function CountRepackModal({
             >
               <option value="">— Select counter —</option>
               <option value="Amaan">Amaan</option>
+              <option value="Naresh">Naresh</option>
               <option value="Nathish">Nathish</option>
-              {user?.name && !['Amaan', 'Nathish'].includes(user.name) && (
+              {user?.name && !['Amaan', 'Naresh', 'Nathish'].includes(user.name) && (
                 <option value={user.name}>{user.name}</option>
               )}
             </select>

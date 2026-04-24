@@ -9,7 +9,7 @@ import { ITEMS } from '@/lib/items'
 import { useAuth } from '@/components/AuthProvider'
 import { apiUrl } from '@/lib/api'
 
-const EVENT_HANDLERS = ['Amaan', 'Nathish']
+const EVENT_HANDLERS = ['Amaan', 'Naresh', 'Nathish']
 
 type ItemKey = 'devices' | 'sd_cards' | 'hubs' | 'cables' | 'extension_boxes' | 'sd_card_readers' | 'other'
 
