@@ -1,7 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Loader2, CheckCircle, RefreshCw, Package } from 'lucide-react'
+import {
+  Loader2, CheckCircle, RefreshCw, Package, Factory,
+  CalendarDays, User, UserCheck, Package2, Boxes, FileText,
+} from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,20 +12,33 @@ import IngestionForm from '@/components/IngestionForm'
 import type { SdPacket } from '@/lib/types'
 import { apiUrl } from '@/lib/api'
 
-function formatDate(d: string) {
+function formatDate(d: string | null) {
+  if (!d) return '—'
   return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+// Extend SdPacket with the extra fields we added
+interface ExtSdPacket extends SdPacket {
+  assigned_to?: string | null
+  num_packages?: number
+  deployment_date?: string | null
+  counted_by?: string | null
+}
+
 export default function ProcessingQueuePage() {
-  const [packets, setPackets]     = useState<SdPacket[]>([])
-  const [loading, setLoading]     = useState(true)
+  const [packets, setPackets]       = useState<ExtSdPacket[]>([])
+  const [loading, setLoading]       = useState(true)
   const [activeForm, setActiveForm] = useState<number | null>(null)
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(apiUrl('/api/packets?status=processing'), { cache: 'no-store' })
-      const data: SdPacket[] = await res.json()
+      // Fetch both collected_for_ingestion (just collected, not yet processing) and processing
+      const res = await fetch(
+        apiUrl('/api/packets?statuses=collected_for_ingestion,processing'),
+        { cache: 'no-store' }
+      )
+      const data: ExtSdPacket[] = await res.json()
       if (Array.isArray(data)) setPackets(data)
     } catch (e) { console.error(e) }
     finally { setLoading(false) }
@@ -64,56 +80,125 @@ export default function ProcessingQueuePage() {
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {packets.map(p => (
-            <div key={p.id}>
-              <Card className="gap-0 py-0 border-blue-200/70 bg-blue-50/30">
-                <CardContent className="py-3 px-4">
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm">{p.team_name}</span>
-                        <span className="text-[10px] text-muted-foreground font-mono">#{p.id}</span>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold border rounded-full text-blue-700 bg-blue-50 border-blue-200">
-                          <Loader2 size={10} className="animate-spin" /> Processing
-                        </span>
+          {packets.map(p => {
+            const isProcessing = p.status === 'processing'
+            return (
+              <div key={p.id}>
+                <Card className={`gap-0 py-0 overflow-hidden ${
+                  isProcessing
+                    ? 'border-blue-200/70 bg-blue-50/20'
+                    : 'border-teal-200/70 bg-teal-50/20'
+                }`}>
+                  {/* Top colour strip */}
+                  <div className={`h-1 ${isProcessing ? 'bg-blue-500' : 'bg-teal-500'}`} />
+
+                  <CardContent className="py-4 px-4 flex flex-col gap-3">
+
+                    {/* Title row */}
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-sm">{p.team_name}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">#{p.id}</span>
+                          {isProcessing ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold border rounded-full text-blue-700 bg-blue-50 border-blue-200">
+                              <Loader2 size={10} className="animate-spin" /> In Progress
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold border rounded-full text-teal-700 bg-teal-50 border-teal-200">
+                              <CheckCircle size={10} /> Ready to Process
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground">
-                        <span>Factory: <strong className="text-foreground">{p.factory || '—'}</strong></span>
-                        <span>Received: <strong className="text-foreground">{formatDate(p.date_received)}</strong></span>
-                        <span>SD Cards: <strong className="text-foreground text-base">{p.sd_card_count}</strong></span>
-                        {p.entered_by && <span>By: {p.entered_by}</span>}
-                      </div>
-                      {p.notes && <p className="text-[10px] text-muted-foreground italic mt-0.5">{p.notes}</p>}
+
+                      {activeForm === p.id ? (
+                        <Button size="sm" variant="outline" onClick={() => setActiveForm(null)} className="shrink-0 h-9">
+                          Cancel
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={() => setActiveForm(p.id)}
+                          className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white gap-1.5 h-9"
+                        >
+                          <CheckCircle size={11} /> Complete Ingestion
+                        </Button>
+                      )}
                     </div>
 
-                    {activeForm === p.id ? (
-                      <Button size="sm" variant="outline" onClick={() => setActiveForm(null)} className="shrink-0 h-9">
-                        Cancel
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => setActiveForm(p.id)}
-                        className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white gap-1.5 h-9"
-                      >
-                        <CheckCircle size={11} /> Complete Ingestion
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                    {/* Details grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[12px]">
+                      <div className="flex items-center gap-2">
+                        <Factory size={12} className="text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground">Factory Name:</span>
+                        <span className="font-semibold text-foreground truncate">{p.factory || '—'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <User size={12} className="text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground">Team:</span>
+                        <span className="font-semibold text-foreground truncate">{p.team_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CalendarDays size={12} className="text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground">Deployment Date:</span>
+                        <span className="font-semibold text-foreground">{formatDate(p.deployment_date ?? null)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CalendarDays size={12} className="text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground">Date Received:</span>
+                        <span className="font-semibold text-foreground">{formatDate(p.date_received)}</span>
+                      </div>
+                    </div>
 
-              {activeForm === p.id && (
-                <div className="mt-2">
-                  <IngestionForm
-                    packet={p}
-                    onSuccess={() => { setActiveForm(null); fetchAll() }}
-                    onCancel={() => setActiveForm(null)}
-                  />
-                </div>
-              )}
-            </div>
-          ))}
+                    {/* Count pills */}
+                    <div className="flex gap-2 flex-wrap text-[11px]">
+                      <div className="flex items-center gap-1.5 bg-muted/60 rounded-md px-2.5 py-1 text-muted-foreground">
+                        <Package2 size={11} />
+                        <span className="font-semibold text-foreground">{p.sd_card_count}</span> SD cards
+                      </div>
+                      {(p.num_packages ?? 0) > 0 && (
+                        <div className="flex items-center gap-1.5 bg-muted/60 rounded-md px-2.5 py-1 text-muted-foreground">
+                          <Boxes size={11} />
+                          <span className="font-semibold text-foreground">{p.num_packages}</span> packages
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Notes */}
+                    {p.notes && (
+                      <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
+                        <FileText size={11} className="mt-0.5 shrink-0" />
+                        <span>{p.notes}</span>
+                      </div>
+                    )}
+
+                    {/* Assigned to */}
+                    {p.assigned_to && (
+                      <div className="flex items-center gap-1.5 text-[11px] bg-blue-50 border border-blue-100 rounded-md px-3 py-2">
+                        <UserCheck size={12} className="text-blue-600 shrink-0" />
+                        <span className="text-blue-800">
+                          Assigned to{' '}
+                          <span className="font-bold">{p.assigned_to}</span>
+                        </span>
+                      </div>
+                    )}
+
+                  </CardContent>
+                </Card>
+
+                {activeForm === p.id && (
+                  <div className="mt-2">
+                    <IngestionForm
+                      packet={p}
+                      onSuccess={() => { setActiveForm(null); fetchAll() }}
+                      onCancel={() => setActiveForm(null)}
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

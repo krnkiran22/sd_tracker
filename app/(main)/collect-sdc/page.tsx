@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   CheckCircle2, Clock, Loader2, RefreshCw, Search, X,
-  Package2, Boxes, Factory, CalendarDays, User, Inbox, ImageIcon, ShieldAlert,
+  Package2, Boxes, Factory, CalendarDays, User, UserCheck, Inbox, ImageIcon, ShieldAlert,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,7 @@ interface ReadyPacket {
   status: 'counted_and_repacked' | 'collected_for_ingestion'
   counted_by: string | null
   collected_by: string | null
+  assigned_to: string | null
   entered_by: string
   created_at: string
 }
@@ -65,6 +66,8 @@ function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
   )
 }
 
+const INGESTION_PEOPLE = ['Asalam', 'Karthikeyan', 'Nikhil', 'Saba', 'Amit', 'Sameer']
+
 // ── Collect confirmation modal ─────────────────────────────────────────────────
 function CollectModal({
   packet,
@@ -77,10 +80,12 @@ function CollectModal({
   onClose: () => void
   onSuccess: () => void
 }) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
+  const [assignedTo, setAssignedTo] = useState('')
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState('')
 
   const handleCollect = async () => {
+    if (!assignedTo) { setError('Please assign this packet to an ingestion person.'); return }
     setLoading(true)
     setError('')
     try {
@@ -89,7 +94,10 @@ function CollectModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           event_type: 'collected_for_ingestion',
-          event_data: { collected_by: collectorName },
+          event_data: {
+            collected_by: collectorName,
+            assigned_to:  assignedTo,
+          },
         }),
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error) }
@@ -104,12 +112,12 @@ function CollectModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-0 sm:px-4">
-      <div className="bg-card border border-border rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-sm overflow-hidden">
+      <div className="bg-card border border-border rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-md overflow-hidden">
         <div className="flex items-start justify-between px-5 py-4 border-b border-border">
           <div>
             <p className="text-sm font-bold flex items-center gap-1.5">
               <CheckCircle2 size={14} className="text-green-600" />
-              Confirm Collection
+              Collect &amp; Assign
             </p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               <span className="font-medium text-foreground">{packet.team_name}</span>
@@ -125,28 +133,62 @@ function CollectModal({
         </div>
 
         <div className="px-5 py-5 flex flex-col gap-4">
+
+          {/* Packet summary */}
           <div className="bg-muted/50 rounded-lg p-3 text-[12px] flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
+              <User size={12} className="text-muted-foreground" />
+              <span className="text-muted-foreground min-w-[80px]">Team:</span>
+              <span className="font-semibold">{packet.team_name}</span>
+            </div>
+            <div className="flex items-center gap-2">
               <Factory size={12} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Factory:</span>
+              <span className="text-muted-foreground min-w-[80px]">Factory:</span>
               <span className="font-semibold">{packet.factory || '—'}</span>
             </div>
             <div className="flex items-center gap-2">
               <CalendarDays size={12} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Deployment:</span>
+              <span className="text-muted-foreground min-w-[80px]">Deployment:</span>
               <span className="font-semibold">{fmtDate(packet.deployment_date)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <User size={12} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Collecting as:</span>
-              <span className="font-semibold text-teal-700">{collectorName}</span>
+              <Package2 size={12} className="text-muted-foreground" />
+              <span className="text-muted-foreground min-w-[80px]">SD Cards:</span>
+              <span className="font-semibold">{packet.sd_card_count} cards · {packet.num_packages} packages</span>
             </div>
           </div>
 
-          <p className="text-[11px] text-muted-foreground">
-            This will mark the packet as <strong>Collected</strong> and notify the logistics team.
-            This action cannot be undone.
-          </p>
+          {/* Assign to ingestion person */}
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
+              <UserCheck size={11} /> Assign to Ingestion Person <span className="text-destructive">*</span>
+            </label>
+            <p className="text-[10px] text-muted-foreground mb-2">
+              Choose the ingestion team member who will process this packet.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {INGESTION_PEOPLE.map(name => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => setAssignedTo(name)}
+                  className={`h-10 rounded-lg border text-sm font-medium transition-all ${
+                    assignedTo === name
+                      ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
+                      : 'bg-background border-border text-muted-foreground hover:border-teal-400 hover:text-foreground'
+                  }`}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Collected by info */}
+          <div className="flex items-center gap-2 text-[11px] bg-teal-50 border border-teal-100 rounded-md px-3 py-2">
+            <User size={11} className="text-teal-700" />
+            <span className="text-teal-800">Collected by <strong>{collectorName}</strong></span>
+          </div>
 
           {error && (
             <p className="text-[11px] text-destructive bg-destructive/10 rounded-md px-3 py-2">
@@ -160,11 +202,11 @@ function CollectModal({
             </Button>
             <Button
               onClick={handleCollect}
-              disabled={loading}
-              className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700 text-white h-11"
+              disabled={loading || !assignedTo}
+              className="flex-1 gap-1.5 bg-teal-600 hover:bg-teal-700 text-white h-11"
             >
               {loading ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
-              {loading ? 'Collecting…' : 'Collect Packet'}
+              {loading ? 'Collecting…' : `Assign to ${assignedTo || '…'}`}
             </Button>
           </div>
         </div>
@@ -261,7 +303,7 @@ function PacketCard({
               </div>
             )}
 
-            {/* Who counted / collected */}
+            {/* Who counted / collected / assigned */}
             <div className="flex flex-wrap gap-2 text-[11px]">
               {packet.counted_by && (
                 <span className="bg-muted rounded-full px-2.5 py-0.5 text-muted-foreground flex items-center gap-1">
@@ -270,9 +312,15 @@ function PacketCard({
                 </span>
               )}
               {isCollected && packet.collected_by && (
-                <span className="bg-green-50 text-green-700 rounded-full px-2.5 py-0.5 flex items-center gap-1">
+                <span className="bg-teal-50 text-teal-700 rounded-full px-2.5 py-0.5 flex items-center gap-1">
                   <CheckCircle2 size={10} /> Collected by{' '}
                   <span className="font-medium">{packet.collected_by}</span>
+                </span>
+              )}
+              {isCollected && packet.assigned_to && (
+                <span className="bg-blue-50 text-blue-700 rounded-full px-2.5 py-0.5 flex items-center gap-1">
+                  <UserCheck size={10} /> Assigned to{' '}
+                  <span className="font-medium">{packet.assigned_to}</span>
                 </span>
               )}
             </div>
