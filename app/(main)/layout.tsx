@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutDashboard, Package, Boxes, FileText, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Package, Boxes, FileText, Inbox, LogOut, Menu } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { AppSidebar } from '@/components/AppSidebar'
@@ -13,23 +13,37 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   if (!user) return null
 
-  const isAdmin     = user.role === 'admin'
-  const isLogistics = user.role === 'logistics'
-  const isIngestion = user.role === 'ingestion'
+  const isAdmin          = user.role === 'admin'
+  const isLogistics      = user.role === 'logistics'
+  const isIngestion      = user.role === 'ingestion'
+  const isIngestionLead  = user.role === 'ingestion_lead'
 
   const roleBadge: Record<string, string> = {
-    admin:     'text-purple-700',
-    logistics: 'text-blue-700',
-    ingestion: 'text-green-700',
-    user:      'text-gray-600',
+    admin:          'text-purple-700',
+    logistics:      'text-blue-700',
+    ingestion:      'text-green-700',
+    ingestion_lead: 'text-teal-700',
+    user:           'text-gray-600',
+  }
+
+  const roleLabel: Record<string, string> = {
+    admin:          'Admin',
+    logistics:      'Logistics',
+    ingestion:      'Ingestion',
+    ingestion_lead: 'Ingestion Lead',
+    user:           'Viewer',
   }
 
   const navItems: NavItem[] = [
-    ...(isAdmin || isIngestion
+    ...(isAdmin || isIngestion || isIngestionLead
       ? [{ href: '/', label: 'Dashboard', icon: <LayoutDashboard size={14} /> }]
       : []),
     ...(isAdmin
       ? [{ href: '/logistics', label: 'SD Card Logistics', icon: <Package size={14} /> }]
+      : []),
+    // Collecting page — ingestion lead collects packets from logistics
+    ...(isAdmin || isIngestionLead
+      ? [{ href: '/collecting', label: 'Collecting', icon: <Inbox size={14} /> }]
       : []),
     ...(isAdmin || isLogistics
       ? [{ href: '/inventory', label: 'Equipment Inventory', icon: <Boxes size={14} /> }]
@@ -42,8 +56,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const sidebarHeader = (
     <div className="flex flex-col gap-1">
       <span className="text-xs font-semibold tracking-tight">Build AI Tracker</span>
-      <span className={`text-[10px] font-semibold capitalize ${roleBadge[user.role] ?? ''}`}>
-        {user.role}
+      <span className={`text-[10px] font-semibold ${roleBadge[user.role] ?? ''}`}>
+        {roleLabel[user.role] ?? user.role}
       </span>
       <span className="text-[10px] text-muted-foreground mt-1 truncate">{user.name}</span>
     </div>

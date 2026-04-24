@@ -1,10 +1,10 @@
-export type Role = 'admin' | 'logistics' | 'ingestion' | 'user'
+export type Role = 'admin' | 'logistics' | 'ingestion' | 'ingestion_lead' | 'user'
 
 export const USERS: { email: string; password: string; role: Role; name: string }[] = [
-  { email: 'ram@build.ai',       password: 'ram@build.ai', role: 'admin',     name: 'Ram (Admin)'       },
-  { email: 'logi@gmail.com',     password: 'logistics',    role: 'logistics', name: 'Logistics'         },
-  { email: 'ingest@build.ai',    password: 'ingestion',    role: 'ingestion', name: 'Ingestion Team'    },
-  { email: 'kiran@build.ai',     password: 'user',         role: 'user',      name: 'Kiran (Viewer)'    },
+  { email: 'ram@build.ai',       password: 'ram@build.ai', role: 'admin',          name: 'Ram (Admin)'       },
+  { email: 'logi@gmail.com',     password: 'logistics',    role: 'logistics',      name: 'Logistics'         },
+  { email: 'ingest@build.ai',    password: 'ingestion',    role: 'ingestion',      name: 'Ingestion Team'    },
+  { email: 'kiran@build.ai',     password: 'kiran@build.ai', role: 'ingestion_lead', name: 'Kiran'           },
 ]
 
 export interface AuthUser { email: string; role: Role; name: string }
