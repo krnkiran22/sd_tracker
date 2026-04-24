@@ -12,6 +12,7 @@ import TeamCard from '@/components/TeamCard'
 import RecordsTable from '@/components/RecordsTable'
 import PacketForm from '@/components/PacketForm'
 import PacketsBoard from '@/components/PacketsBoard'
+import LogisticsDashboard from '@/components/LogisticsDashboard'
 import IngestionDashboard from '@/components/IngestionDashboard'
 import AdminPanel from '@/components/AdminPanel'
 import { SentReturnedByTeam } from '@/components/charts/SentReturnedByTeam'
@@ -178,14 +179,11 @@ export default function Dashboard() {
               </Badge>
             </div>
 
-            {/* Packet form */}
-            <PacketForm onSuccess={() => setPacketRefresh(n => n + 1)} />
+            {/* New event-based logistics flow */}
+            <LogisticsDashboard />
 
-            {/* Existing equipment transaction form */}
+            {/* Equipment transaction form */}
             <TransactionForm onSuccess={fetchRecords} />
-
-            {/* Packets status board */}
-            <PacketsBoard refreshTrigger={packetRefresh} />
           </>
         )}
 
@@ -203,6 +201,7 @@ export default function Dashboard() {
                 <span className="text-[10px] text-muted-foreground ml-auto hidden group-open:inline">▾ collapse</span>
               </summary>
               <div className="flex flex-col gap-4 mt-1">
+                <LogisticsDashboard />
                 <PacketForm onSuccess={() => setPacketRefresh(n => n + 1)} />
                 <PacketsBoard refreshTrigger={packetRefresh} />
               </div>
