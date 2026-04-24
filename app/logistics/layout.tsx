@@ -19,12 +19,12 @@ const navItems = [
     icon: <Clock size={14} />,
   },
   {
-    href: '/inventory',
+    href: '/logistics/inventory',
     label: 'Equipment Inventory',
     icon: <Boxes size={14} />,
   },
   {
-    href: '/report',
+    href: '/logistics/report',
     label: 'Reports',
     icon: <FileText size={14} />,
   },

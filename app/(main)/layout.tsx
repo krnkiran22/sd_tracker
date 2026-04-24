@@ -37,10 +37,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     ...(isAdmin || isLogistics
       ? [{ href: '/report', label: 'Reports', icon: <FileText size={14} /> }]
       : []),
-    // Logistics users: quick link back to their SD card pipeline
-    ...(isLogistics
-      ? [{ href: '/logistics/log-arrival', label: 'SD Card Logistics', icon: <Package size={14} /> }]
-      : []),
   ]
 
   const sidebarHeader = (
