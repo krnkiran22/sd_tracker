@@ -9,7 +9,7 @@ import { ITEMS } from '@/lib/items'
 import { useAuth } from '@/components/AuthProvider'
 import { apiUrl } from '@/lib/api'
 
-const LOGISTICS_PEOPLE = ['Amaan', 'Nathish']
+const EVENT_HANDLERS = ['Amaan', 'Nathish']
 
 type ItemKey = 'devices' | 'sd_cards' | 'hubs' | 'cables' | 'extension_boxes' | 'sd_card_readers' | 'other'
 
@@ -48,7 +48,6 @@ interface TransactionFormProps { onSuccess: () => void }
 
 export default function TransactionForm({ onSuccess }: TransactionFormProps) {
   const { user } = useAuth()
-  const isLogistics = user?.role === 'logistics'
 
   const [teamInput, setTeamInput]       = useState('')
   const [suggestions, setSuggestions]   = useState<string[]>([])
@@ -116,7 +115,7 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
     setError('')
     if (!teamInput.trim()) { setError('Team name is required.'); return }
     if (totalItems === 0)   { setError('Enter at least one item quantity.'); return }
-    if (isLogistics && !enteredBy) { setError('Please select who is entering this record.'); return }
+    if (!enteredBy.trim()) { setError('Please select who is handling this event.'); return }
     setLoading(true)
     try {
       const res = await fetch(apiUrl('/api/transactions'), {
@@ -125,7 +124,7 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
         body: JSON.stringify({
           team_name: teamInput.trim(), type, date, ...items,
           other_description: otherDesc, notes, photo_url: photo,
-          entered_by: isLogistics ? enteredBy : (user?.name ?? null),
+          entered_by: enteredBy.trim() || (user?.name ?? null),
         }),
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error) }
@@ -267,20 +266,23 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
             </div>
           </div>
 
-          {/* Entered By — required for logistics, shown for all */}
-          <div className="max-w-xs">
-            <label className="text-label block mb-1">
-              Entered By {isLogistics && <span className="text-destructive">*</span>}
-            </label>
-            {isLogistics ? (
+          {/* Event Handler — required for all roles */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-label block mb-1">
+                Event Handler <span className="text-destructive">*</span>
+              </label>
+              <p className="text-[10px] text-muted-foreground mb-1.5">Who is physically handling this transaction</p>
               <select value={enteredBy} onChange={e => setEnteredBy(e.target.value)}
                 className="w-full h-9 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring">
-                <option value="">— Select person —</option>
-                {LOGISTICS_PEOPLE.map(p => <option key={p} value={p}>{p}</option>)}
+                <option value="">— Select handler —</option>
+                {EVENT_HANDLERS.map(p => <option key={p} value={p}>{p}</option>)}
+                {/* Show admin/current user as an option if not in the list */}
+                {user?.name && !EVENT_HANDLERS.includes(user.name) && (
+                  <option value={user.name}>{user.name}</option>
+                )}
               </select>
-            ) : (
-              <Input value={user?.name ?? ''} disabled className="opacity-60" />
-            )}
+            </div>
           </div>
 
           {error   && <p className="text-[10px] text-destructive">{error}</p>}

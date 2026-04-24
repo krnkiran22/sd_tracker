@@ -1,10 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Search, X } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import TransactionForm from '@/components/TransactionForm'
 import TeamCard from '@/components/TeamCard'
 import RecordsTable from '@/components/RecordsTable'
@@ -49,13 +50,13 @@ function KpiCard({ label, value, sub, trend }: {
 }) {
   return (
     <Card className="gap-0 py-0 animate-fade-in">
-      <CardContent className="py-4 flex flex-col gap-1">
+      <CardContent className="py-5 flex flex-col gap-1.5">
         <span className="text-label">{label}</span>
         <div className="flex items-end gap-2">
-          <span className="text-2xl font-semibold tabular-nums leading-none">{value}</span>
+          <span className="text-3xl font-semibold tabular-nums leading-none">{value}</span>
           {trend && (
-            <span className={`mb-0.5 ${trend === 'up' ? 'text-[var(--chart-4)]' : trend === 'down' ? 'text-[var(--chart-2)]' : 'text-muted-foreground'}`}>
-              {trend === 'up' ? <TrendingUp size={14} /> : trend === 'down' ? <TrendingDown size={14} /> : <Minus size={14} />}
+            <span className={`mb-1 ${trend === 'up' ? 'text-amber-500' : trend === 'down' ? 'text-green-600' : 'text-muted-foreground'}`}>
+              {trend === 'up' ? <TrendingUp size={16} /> : trend === 'down' ? <TrendingDown size={16} /> : <Minus size={16} />}
             </span>
           )}
         </div>
@@ -76,8 +77,9 @@ function ChartSkeleton() {
 }
 
 export default function InventoryPage() {
-  const [records, setRecords] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
+  const [records, setRecords]       = useState<Transaction[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [teamSearch, setTeamSearch] = useState('')
   const { user } = useAuth()
 
   const isAdmin     = user?.role === 'admin'
@@ -112,21 +114,30 @@ export default function InventoryPage() {
     Returned: r.type === 'received' ? ITEMS.reduce((s, i) => s + ((r as any)[i.key] || 0), 0) : 0,
   }))
 
-  return (
-    <div className="flex flex-col gap-6">
+  // Filter team cards by search
+  const filteredSummaries = teamSearch.trim()
+    ? summaries.filter(s => s.team.toLowerCase().includes(teamSearch.toLowerCase()))
+    : summaries
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold">Equipment Inventory</span>
-        <Badge variant="outline" className="text-[10px]">Sent / Received</Badge>
+  return (
+    <div className="flex flex-col gap-8">
+
+      {/* ── Page header ─────────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-3">
+        <div>
+          <h1 className="text-base font-semibold">Equipment Inventory</h1>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Track sent &amp; received equipment across all teams</p>
+        </div>
+        <Badge variant="outline" className="ml-auto text-[10px]">{records.length} transactions</Badge>
       </div>
 
-      {/* Transaction form — admin + logistics */}
+      {/* ── Transaction form (admin + logistics) ────────────────────────────── */}
       {(isAdmin || isLogistics) && (
         <TransactionForm onSuccess={fetchRecords} />
       )}
 
-      {/* KPI Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {/* ── KPI Row ─────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <KpiCard label="Total Sent"     value={totalSent} />
         <KpiCard label="Total Received" value={totalReturned} />
         <KpiCard label="Outstanding"    value={totalOut} trend={totalOut > 0 ? 'up' : 'neutral'} />
@@ -134,77 +145,110 @@ export default function InventoryPage() {
         <KpiCard label="Teams Pending"  value={teamsPending} trend={teamsPending > 0 ? 'up' : 'neutral'} sub="have outstanding" />
       </div>
 
-      {/* Per-item summary strip */}
+      {/* ── Per-item summary strip ───────────────────────────────────────────── */}
       {itemTotals.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-          {itemTotals.map(item => (
-            <Card key={item.key} className="gap-0 py-0 animate-fade-in">
-              <CardContent className="py-3 flex flex-col gap-1">
-                <span className="text-label">{item.label}</span>
-                <span className="text-lg font-semibold tabular-nums leading-none">{item.outstanding}</span>
-                <span className="text-[10px] text-muted-foreground">out of {item.sent} sent</span>
-                <div className="h-0.5 bg-muted mt-1 overflow-hidden">
-                  <div className="h-full bg-foreground transition-all"
-                    style={{ width: `${item.sent > 0 ? Math.min(100, Math.round((item.received / item.sent) * 100)) : 0}%` }} />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div>
+          <div className="text-label mb-2">Outstanding by Item</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            {itemTotals.map(item => (
+              <Card key={item.key} className="gap-0 py-0 animate-fade-in">
+                <CardContent className="py-4 flex flex-col gap-1.5">
+                  <span className="text-label">{item.label}</span>
+                  <span className="text-2xl font-semibold tabular-nums leading-none">{item.outstanding}</span>
+                  <span className="text-[10px] text-muted-foreground">of {item.sent} sent</span>
+                  <div className="h-1 bg-muted mt-1 overflow-hidden rounded-full">
+                    <div className="h-full bg-foreground transition-all rounded-full"
+                      style={{ width: `${item.sent > 0 ? Math.min(100, Math.round((item.received / item.sent) * 100)) : 0}%` }} />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">
+                    {item.sent > 0 ? Math.round((item.received / item.sent) * 100) : 0}% returned
+                  </span>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <Card className="gap-2 py-3">
-          <CardContent className="px-4">
-            <div className="text-label mb-3">Sent vs Received / Team</div>
-            <div className="h-52">
+      {/* ── Charts ──────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="gap-0 py-0">
+          <div className="px-5 py-4 border-b border-border">
+            <span className="text-xs font-semibold">Sent vs Received — by Team</span>
+          </div>
+          <CardContent className="px-5 py-4">
+            <div className="h-64">
               {loading ? <ChartSkeleton /> : <SentReturnedByTeam data={summaries.map(s => ({ team: s.team, sent: s.sent, returned: s.returned }))} />}
             </div>
           </CardContent>
         </Card>
-        <Card className="gap-2 py-3">
-          <CardContent className="px-4">
-            <div className="text-label mb-3">Cumulative Circulation</div>
-            <div className="h-52">
+        <Card className="gap-0 py-0">
+          <div className="px-5 py-4 border-b border-border">
+            <span className="text-xs font-semibold">Cumulative Circulation Timeline</span>
+          </div>
+          <CardContent className="px-5 py-4">
+            <div className="h-64">
               {loading ? <ChartSkeleton /> : <CirculationTimeline records={chartRecords} />}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Team Cards */}
+      {/* ── Team Overview ────────────────────────────────────────────────────── */}
       <section>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-label">Team Overview</span>
-          <span className="text-border">·</span>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-xs font-semibold">Team Overview</span>
           <span className="text-[10px] text-muted-foreground">{summaries.length} teams</span>
+          <div className="ml-auto relative w-48">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              value={teamSearch}
+              onChange={e => setTeamSearch(e.target.value)}
+              placeholder="Search teams…"
+              className="h-7 pl-7 text-xs"
+            />
+            {teamSearch && (
+              <button onClick={() => setTeamSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X size={11} />
+              </button>
+            )}
+          </div>
         </div>
+
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {[1, 2, 3].map(i => <div key={i} className="h-48 bg-muted animate-pulse" />)}
+            {[1, 2, 3, 4].map(i => <div key={i} className="h-48 bg-muted animate-pulse rounded" />)}
           </div>
-        ) : summaries.length === 0 ? (
+        ) : filteredSummaries.length === 0 ? (
           <Card><CardContent className="py-8 text-center text-xs text-muted-foreground">
-            No transactions yet. Use the form above to record one.
+            {teamSearch ? `No teams matching "${teamSearch}"` : 'No transactions yet. Use the form above to record one.'}
           </CardContent></Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {summaries.map(s => (
+            {filteredSummaries.map(s => (
               <TeamCard key={s.team} team={s.team} transactions={teamTxMap[s.team] || []} />
             ))}
           </div>
         )}
       </section>
 
-      {/* Transaction Log */}
+      {/* ── Transaction Log ──────────────────────────────────────────────────── */}
       <Card className="gap-0 py-0">
-        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-          <span className="text-xs font-semibold">Transaction Log</span>
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+          <div>
+            <span className="text-xs font-semibold">Transaction Log</span>
+            <p className="text-[10px] text-muted-foreground mt-0.5">All recorded send &amp; receive events</p>
+          </div>
           <Badge variant="outline">{records.length} entries</Badge>
         </div>
-        <CardContent className="py-3 max-h-80 overflow-y-auto">
-          <RecordsTable records={records} onEdited={fetchRecords} canEdit={canEdit} canDelete={canDelete} />
+        <CardContent className="py-0 px-0">
+          <RecordsTable
+            records={records}
+            onEdited={fetchRecords}
+            canEdit={canEdit}
+            canDelete={canDelete}
+          />
         </CardContent>
       </Card>
 
