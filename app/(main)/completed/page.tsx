@@ -25,20 +25,26 @@ export default function CompletedPage() {
     setLoading(true)
     try {
       const res = await fetch(apiUrl('/api/packets?status=completed'), { cache: 'no-store' })
-      const data: SdPacket[] = await res.json()
-      if (Array.isArray(data)) {
-        setPackets(data)
-        const records: Record<number, IngestionRecord> = {}
-        await Promise.all(
-          data.map(async p => {
+      if (!res.ok) { setPackets([]); return }
+      const data = await res.json()
+      if (!Array.isArray(data)) { setPackets([]); return }
+      setPackets(data)
+      const records: Record<number, IngestionRecord> = {}
+      await Promise.all(
+        data.map(async (p: SdPacket) => {
+          try {
             const r = await fetch(apiUrl(`/api/packets/${p.id}`), { cache: 'no-store' }).then(x => x.json())
             if (r.ingestion) records[p.id] = r.ingestion
-          })
-        )
-        setIngestions(records)
-      }
-    } catch (e) { console.error(e) }
-    finally { setLoading(false) }
+          } catch { /* skip */ }
+        })
+      )
+      setIngestions(records)
+    } catch (e) {
+      console.error(e)
+      setPackets([])
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { fetchAll() }, [fetchAll])

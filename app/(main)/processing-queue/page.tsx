@@ -17,31 +17,27 @@ function formatDate(d: string | null) {
   return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-// Extend SdPacket with the extra fields we added
-interface ExtSdPacket extends SdPacket {
-  assigned_to?: string | null
-  num_packages?: number
-  deployment_date?: string | null
-  counted_by?: string | null
-}
-
 export default function ProcessingQueuePage() {
-  const [packets, setPackets]       = useState<ExtSdPacket[]>([])
+  const [packets, setPackets]       = useState<SdPacket[]>([])
   const [loading, setLoading]       = useState(true)
   const [activeForm, setActiveForm] = useState<number | null>(null)
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      // Fetch both collected_for_ingestion (just collected, not yet processing) and processing
       const res = await fetch(
         apiUrl('/api/packets?statuses=collected_for_ingestion,processing'),
         { cache: 'no-store' }
       )
-      const data: ExtSdPacket[] = await res.json()
-      if (Array.isArray(data)) setPackets(data)
-    } catch (e) { console.error(e) }
-    finally { setLoading(false) }
+      if (!res.ok) { setPackets([]); return }
+      const data = await res.json()
+      setPackets(Array.isArray(data) ? data : [])
+    } catch (e) {
+      console.error(e)
+      setPackets([])
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { fetchAll() }, [fetchAll])
@@ -85,11 +81,8 @@ export default function ProcessingQueuePage() {
             return (
               <div key={p.id}>
                 <Card className={`gap-0 py-0 overflow-hidden ${
-                  isProcessing
-                    ? 'border-blue-200/70 bg-blue-50/20'
-                    : 'border-teal-200/70 bg-teal-50/20'
+                  isProcessing ? 'border-blue-200/70 bg-blue-50/20' : 'border-teal-200/70 bg-teal-50/20'
                 }`}>
-                  {/* Top colour strip */}
                   <div className={`h-1 ${isProcessing ? 'bg-blue-500' : 'bg-teal-500'}`} />
 
                   <CardContent className="py-4 px-4 flex flex-col gap-3">
@@ -120,7 +113,7 @@ export default function ProcessingQueuePage() {
                         <Button
                           size="sm"
                           onClick={() => setActiveForm(p.id)}
-                          className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white gap-1.5 h-9"
+                          className="shrink-0 bg-green-600 hover:bg-green-700 text-white gap-1.5 h-9"
                         >
                           <CheckCircle size={11} /> Complete Ingestion
                         </Button>
@@ -178,8 +171,7 @@ export default function ProcessingQueuePage() {
                       <div className="flex items-center gap-1.5 text-[11px] bg-blue-50 border border-blue-100 rounded-md px-3 py-2">
                         <UserCheck size={12} className="text-blue-600 shrink-0" />
                         <span className="text-blue-800">
-                          Assigned to{' '}
-                          <span className="font-bold">{p.assigned_to}</span>
+                          Assigned to <span className="font-bold">{p.assigned_to}</span>
                         </span>
                       </div>
                     )}

@@ -1,6 +1,12 @@
 // Shared API types — mirrors backend DB types without any Node.js dependencies.
 
-export type PacketStatus = 'received' | 'processing' | 'completed'
+export type PacketStatus =
+  | 'received'
+  | 'processing'
+  | 'completed'
+  | 'received_at_hq'
+  | 'counted_and_repacked'
+  | 'collected_for_ingestion'
 
 export interface SdPacket {
   id: number
@@ -8,12 +14,19 @@ export interface SdPacket {
   factory: string
   date_received: string
   sd_card_count: number
-  notes?: string
+  num_packages?: number
+  deployment_date?: string | null
+  notes?: string | null
   photo_url?: string | null
-  photo_urls?: string | null  // JSON array of data-URL strings
+  photo_urls?: string | null
+  repack_photo_urls?: string | null
   status: PacketStatus
   entered_by: string
+  counted_by?: string | null
+  collected_by?: string | null
+  assigned_to?: string | null
   poc_emails: string
+  poc_phones?: string | null
   created_at: string
 }
 
