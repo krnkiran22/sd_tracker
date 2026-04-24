@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Package, Clock, Boxes, LogOut, Menu } from 'lucide-react'
+import { Package, Clock, Boxes, FileText, LogOut, Menu } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { AppSidebar } from '@/components/AppSidebar'
@@ -18,6 +17,16 @@ const navItems = [
     href: '/logistics/pending',
     label: 'Pending Count & Repack',
     icon: <Clock size={14} />,
+  },
+  {
+    href: '/inventory',
+    label: 'Equipment Inventory',
+    icon: <Boxes size={14} />,
+  },
+  {
+    href: '/report',
+    label: 'Reports',
+    icon: <FileText size={14} />,
   },
 ]
 
@@ -43,25 +52,16 @@ export default function LogisticsLayout({ children }: { children: React.ReactNod
     </div>
   )
 
-  // ── Sidebar footer: optional inventory link + logout ───────────────────────
+  // ── Sidebar footer: logout ────────────────────────────────────────────────
   const sidebarFooter = (
-    <div className="flex flex-col gap-1.5">
-      {user.role === 'admin' && (
-        <Link href="/inventory" className="block">
-          <Button variant="outline" size="sm" className="w-full gap-2 justify-start">
-            <Boxes size={12} /> Inventory
-          </Button>
-        </Link>
-      )}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-full gap-2 justify-start text-muted-foreground hover:text-foreground"
-        onClick={logout}
-      >
-        <LogOut size={12} /> Logout
-      </Button>
-    </div>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="w-full gap-2 justify-start text-muted-foreground hover:text-foreground"
+      onClick={logout}
+    >
+      <LogOut size={12} /> Logout
+    </Button>
   )
 
   return (
