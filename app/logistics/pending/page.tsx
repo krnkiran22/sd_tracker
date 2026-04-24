@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   Clock, Loader2, CheckCircle2, ChevronRight, X, RefreshCw, Search,
-  Package2, Boxes, Factory, CalendarDays, User,
+  Package2, Boxes, Factory, CalendarDays, User, Camera, ImagePlus, Trash2,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -58,10 +58,31 @@ function CountRepackModal({
   const [deploymentDate, setDeploymentDate] = useState('')
   const [conditionNotes, setConditionNotes] = useState('')
   const [countedBy,      setCountedBy]      = useState('')
+  const [photoUrls,      setPhotoUrls]      = useState<string[]>([])
   const [loading,        setLoading]        = useState(false)
   const [error,          setError]          = useState('')
 
+  const photoInputRef   = useRef<HTMLInputElement>(null)
+  const cameraInputRef  = useRef<HTMLInputElement>(null)
+
   const extraCounters = user?.name && !COUNTERS.includes(user.name) ? [user.name] : []
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    files.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = ev => {
+        const result = ev.target?.result as string
+        if (result) setPhotoUrls(prev => [...prev, result])
+      }
+      reader.readAsDataURL(file)
+    })
+    e.target.value = ''
+  }
+
+  const removePhoto = (idx: number) =>
+    setPhotoUrls(prev => prev.filter((_, i) => i !== idx))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,6 +107,10 @@ function CountRepackModal({
       setError('Select who is counting.')
       return
     }
+    if (photoUrls.length === 0) {
+      setError('Add at least one photo of the packed items.')
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch(apiUrl(`/api/packets/${packet.id}/events`), {
@@ -94,12 +119,13 @@ function CountRepackModal({
         body: JSON.stringify({
           event_type: 'counted_and_repacked',
           event_data: {
-            sd_card_count:   Number(sdCardCount),
-            num_packages:    Number(numPackages),
-            factory_name:    factoryName.trim(),
-            deployment_date: deploymentDate,
-            condition_notes: conditionNotes.trim() || null,
-            counted_by:      countedBy,
+            sd_card_count:    Number(sdCardCount),
+            num_packages:     Number(numPackages),
+            factory_name:     factoryName.trim(),
+            deployment_date:  deploymentDate,
+            condition_notes:  conditionNotes.trim() || null,
+            counted_by:       countedBy,
+            repack_photo_urls: photoUrls,
           },
         }),
       })
@@ -225,6 +251,72 @@ function CountRepackModal({
                 <option key={name} value={name}>{name}</option>
               ))}
             </select>
+          </div>
+
+          {/* Packed Images */}
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
+              <Camera size={11} /> Packed Images <span className="text-destructive">*</span>
+            </label>
+            <p className="text-[10px] text-muted-foreground mb-2">
+              Take photos of the packed items. Multiple images allowed.
+            </p>
+
+            {/* Photo thumbnails */}
+            {photoUrls.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {photoUrls.map((url, idx) => (
+                  <div key={idx} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-border">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt={`Repack photo ${idx + 1}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(idx)}
+                      className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload buttons */}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex-1 flex items-center justify-center gap-2 h-10 border border-dashed border-border rounded-lg text-xs text-muted-foreground hover:bg-muted/50 hover:border-primary transition-colors"
+              >
+                <Camera size={14} /> Camera
+              </button>
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="flex-1 flex items-center justify-center gap-2 h-10 border border-dashed border-border rounded-lg text-xs text-muted-foreground hover:bg-muted/50 hover:border-primary transition-colors"
+              >
+                <ImagePlus size={14} /> Gallery
+              </button>
+            </div>
+
+            {/* Hidden file inputs */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              multiple
+              className="hidden"
+              onChange={handlePhotoChange}
+            />
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handlePhotoChange}
+            />
           </div>
 
           {/* Condition Notes */}
