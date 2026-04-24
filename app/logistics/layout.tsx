@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Package, Clock, Boxes, FileText, LogOut, Menu } from 'lucide-react'
+import { Package, Clock, Boxes, FileText, Inbox, LogOut, Menu } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { AppSidebar } from '@/components/AppSidebar'
@@ -17,6 +17,11 @@ const navItems = [
     href: '/logistics/pending',
     label: 'Pending Count & Repack',
     icon: <Clock size={14} />,
+  },
+  {
+    href: '/logistics/ready-to-ingest',
+    label: 'Ready to Ingest',
+    icon: <Inbox size={14} />,
   },
   {
     href: '/logistics/inventory',
