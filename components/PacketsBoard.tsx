@@ -58,18 +58,19 @@ export default function PacketsBoard({ refreshTrigger }: PacketsBoardProps) {
   return (
     <Card className="gap-0 py-0">
       <div className="px-4 py-3 border-b border-border flex flex-col gap-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold">SD Card Packets</span>
             <Badge variant="outline">{visible.length} / {packets.length}</Badge>
           </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <button onClick={fetchPackets} className="text-muted-foreground hover:text-foreground transition-colors p-1">
-              <RefreshCw size={11} />
-            </button>
+          <button onClick={fetchPackets}
+            className="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded min-w-[36px] min-h-[36px] flex items-center justify-center ml-auto sm:ml-0">
+            <RefreshCw size={13} />
+          </button>
+          <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
             {(['all', 'received', 'processing', 'completed'] as const).map(s => (
               <button key={s} onClick={() => setFilter(s)}
-                className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded transition-colors ${
+                className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded transition-colors min-h-[36px] ${
                   filter === s ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted'
                 }`}>
                 {s === 'all' ? `All (${counts.all})` : `${s} (${counts[s]})`}
@@ -77,15 +78,15 @@ export default function PacketsBoard({ refreshTrigger }: PacketsBoardProps) {
             ))}
           </div>
         </div>
-        {/* Team search */}
-        <div className="relative max-w-xs">
+        {/* Team search — full width on mobile */}
+        <div className="relative w-full sm:max-w-xs">
           <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search team…"
-            className="h-7 pl-8 pr-8 text-xs w-full border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring" />
+            className="h-9 pl-8 pr-8 text-sm w-full border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring" />
           {search && (
             <button onClick={() => setSearch('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              <X size={11} />
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1">
+              <X size={12} />
             </button>
           )}
         </div>

@@ -165,17 +165,17 @@ export default function ReportPageContent({
     <div className="flex flex-col gap-6">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex-1">
           <h1 className="text-base font-semibold">Reports</h1>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Filter, search and export transaction history</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Filter, search and export transaction history</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="xs" onClick={fetchData} className="gap-1">
-            <Filter size={11} /> Apply Filters
+          <Button variant="outline" onClick={fetchData} className="gap-1.5 h-10 flex-1 sm:flex-none">
+            <Filter size={13} /> Apply Filters
           </Button>
-          <Button size="xs" onClick={exportPDF} disabled={exporting || loading} className="gap-1">
-            <Download size={11} />
+          <Button onClick={exportPDF} disabled={exporting || loading} className="gap-1.5 h-10 flex-1 sm:flex-none">
+            <Download size={13} />
             {exporting ? 'Exporting…' : 'Export PDF'}
           </Button>
         </div>
@@ -188,19 +188,19 @@ export default function ReportPageContent({
           <span className="text-[10px] text-muted-foreground ml-2">Click "Apply Filters" to fetch</span>
         </div>
         <CardContent className="py-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
             <div>
               <label className="text-label block mb-1">From Date</label>
-              <Input type="date" value={fromDate} onChange={e => setFrom(e.target.value)} />
+              <Input type="date" value={fromDate} onChange={e => setFrom(e.target.value)} className="h-10 text-sm" />
             </div>
             <div>
               <label className="text-label block mb-1">To Date</label>
-              <Input type="date" value={toDate} onChange={e => setTo(e.target.value)} />
+              <Input type="date" value={toDate} onChange={e => setTo(e.target.value)} className="h-10 text-sm" />
             </div>
             <div>
               <label className="text-label block mb-1">Team</label>
               <select value={teamFilter} onChange={e => setTeamF(e.target.value)}
-                className="w-full h-8 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring">
+                className="w-full h-10 border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring rounded">
                 <option value="all">All Teams</option>
                 {teams.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
@@ -208,7 +208,7 @@ export default function ReportPageContent({
             <div>
               <label className="text-label block mb-1">Type</label>
               <select value={typeFilter} onChange={e => setTypeF(e.target.value)}
-                className="w-full h-8 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring">
+                className="w-full h-10 border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring rounded">
                 <option value="all">All Types</option>
                 <option value="sent">Sent</option>
                 <option value="received">Received</option>
@@ -217,7 +217,7 @@ export default function ReportPageContent({
             <div>
               <label className="text-label block mb-1">Item</label>
               <select value={itemFilter} onChange={e => setItemF(e.target.value)}
-                className="w-full h-8 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring">
+                className="w-full h-10 border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring rounded">
                 <option value="all">All Items</option>
                 {ITEMS.map(i => <option key={i.key} value={i.label}>{i.label}</option>)}
               </select>
@@ -225,7 +225,7 @@ export default function ReportPageContent({
             <div>
               <label className="text-label block mb-1">Event Handler</label>
               <select value={handlerFilter} onChange={e => setHandlerF(e.target.value)}
-                className="w-full h-8 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring">
+                className="w-full h-10 border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring rounded">
                 <option value="all">All Handlers</option>
                 {handlers.map(h => <option key={h} value={h}>{h}</option>)}
               </select>
@@ -255,21 +255,23 @@ export default function ReportPageContent({
 
       {/* ── Transactions table ──────────────────────────────────────────────── */}
       <Card className="gap-0 py-0">
-        <div className="px-4 py-3 border-b border-border flex items-center gap-3 flex-wrap">
-          <span className="text-xs font-semibold">Transactions</span>
-          <Badge variant="outline">{filtered.length} records</Badge>
-          <div className="ml-auto relative w-48">
+        <div className="px-4 py-3 border-b border-border flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold">Transactions</span>
+            <Badge variant="outline">{filtered.length} records</Badge>
+          </div>
+          <div className="relative w-full sm:w-52 sm:ml-auto">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               value={searchText}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search team…"
-              className="h-7 pl-8 text-xs"
+              className="h-9 pl-8 text-sm w-full"
             />
             {searchText && (
               <button onClick={() => setSearch('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                <X size={11} />
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1">
+                <X size={12} />
               </button>
             )}
           </div>

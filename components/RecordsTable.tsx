@@ -72,34 +72,34 @@ export default function RecordsTable({ records, onEdited, canEdit = false, canDe
       {/* ── Filter bar ────────────────────────────────────────────────────────── */}
       <div className="px-4 py-3 border-b border-border flex flex-col gap-3">
         {/* Top row: search + filter toggle */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-xs">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative flex-1 min-w-0">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search team…"
-              className="h-8 pl-8 text-xs"
+              className="h-9 pl-8 text-sm w-full"
             />
             {search && (
               <button onClick={() => setSearch('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                <X size={11} />
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1">
+                <X size={12} />
               </button>
             )}
           </div>
 
           <button
             onClick={() => setShowFilters(v => !v)}
-            className={`flex items-center gap-1.5 h-8 px-3 text-xs border rounded transition-colors ${
+            className={`flex items-center gap-1.5 h-9 px-3 text-xs border rounded transition-colors shrink-0 ${
               showFilters || activeFilters > 0
                 ? 'border-foreground bg-foreground text-background'
                 : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground'
             }`}>
-            <SlidersHorizontal size={11} />
+            <SlidersHorizontal size={12} />
             Filters
             {activeFilters > 0 && (
-              <span className="bg-background text-foreground rounded-full px-1 text-[9px] font-bold leading-none py-0.5">
+              <span className="bg-background text-foreground rounded-full px-1.5 text-[10px] font-bold leading-none py-0.5">
                 {activeFilters}
               </span>
             )}
@@ -107,19 +107,19 @@ export default function RecordsTable({ records, onEdited, canEdit = false, canDe
 
           {activeFilters > 0 && (
             <button onClick={clearFilters}
-              className="text-[10px] text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1">
-              <X size={10} /> Clear
+              className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1 shrink-0">
+              <X size={12} /> Clear
             </button>
           )}
 
-          <span className="ml-auto text-[10px] text-muted-foreground">
+          <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
             {filtered.length} / {records.length} rows
           </span>
         </div>
 
         {/* Expanded filter panel */}
         {showFilters && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-border/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-border/50">
             <div>
               <label className="text-[10px] text-muted-foreground block mb-1">Type</label>
               <select
@@ -216,20 +216,20 @@ export default function RecordsTable({ records, onEdited, canEdit = false, canDe
                     </td>
 
                     {/* Action buttons */}
-                    <td className="py-2.5 pr-3">
-                      <div className="flex items-center gap-1 justify-end">
+                    <td className="py-2 pr-3">
+                      <div className="flex items-center gap-0.5 justify-end">
                         {(r.photo_url || r.other_description || r.notes) && (
                           <button onClick={() => setExpandedId(expandedId === r.id ? null : (r.id ?? null))}
-                            className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded"
+                            className="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded min-w-[36px] min-h-[36px] flex items-center justify-center"
                             title="Show details">
-                            {expandedId === r.id ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                            {expandedId === r.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                           </button>
                         )}
                         {canEdit && (
                           <button onClick={() => setEditingTx(r)}
-                            className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded"
+                            className="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded min-w-[36px] min-h-[36px] flex items-center justify-center"
                             title="Edit transaction">
-                            <Pencil size={11} />
+                            <Pencil size={13} />
                           </button>
                         )}
                         {canDelete && (
@@ -237,19 +237,19 @@ export default function RecordsTable({ records, onEdited, canEdit = false, canDe
                             <span className="flex items-center gap-1">
                               <button onClick={() => handleDelete(r.id!)}
                                 disabled={deletingId === r.id}
-                                className="text-[10px] text-destructive font-semibold hover:underline disabled:opacity-50">
+                                className="text-xs text-destructive font-semibold hover:underline disabled:opacity-50 px-1 py-2">
                                 {deletingId === r.id ? '…' : 'Yes'}
                               </button>
                               <button onClick={() => setConfirmId(null)}
-                                className="text-[10px] text-muted-foreground hover:underline">
+                                className="text-xs text-muted-foreground hover:underline px-1 py-2">
                                 No
                               </button>
                             </span>
                           ) : (
                             <button onClick={() => setConfirmId(r.id ?? null)}
-                              className="text-muted-foreground hover:text-destructive transition-colors p-1 hover:bg-muted rounded"
+                              className="text-muted-foreground hover:text-destructive transition-colors p-2 hover:bg-muted rounded min-w-[36px] min-h-[36px] flex items-center justify-center"
                               title="Delete transaction">
-                              <Trash2 size={11} />
+                              <Trash2 size={13} />
                             </button>
                           )
                         )}

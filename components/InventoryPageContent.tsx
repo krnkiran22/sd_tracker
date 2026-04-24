@@ -140,7 +140,7 @@ export default function InventoryPageContent({ initialRecords }: { initialRecord
       )}
 
       {/* ── KPI Row ─────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <KpiCard label="Total Sent"     value={totalSent} />
         <KpiCard label="Total Received" value={totalReturned} />
         <KpiCard label="Outstanding"    value={totalOut} trend={totalOut > 0 ? 'up' : 'neutral'} />
@@ -180,7 +180,7 @@ export default function InventoryPageContent({ initialRecords }: { initialRecord
             <span className="text-xs font-semibold">Sent vs Received — by Team</span>
           </div>
           <CardContent className="px-5 py-4">
-            <div className="h-64">
+            <div className="h-52 sm:h-64">
               {loading ? <ChartSkeleton /> : <SentReturnedByTeam data={summaries.map(s => ({ team: s.team, sent: s.sent, returned: s.returned }))} />}
             </div>
           </CardContent>
@@ -190,7 +190,7 @@ export default function InventoryPageContent({ initialRecords }: { initialRecord
             <span className="text-xs font-semibold">Cumulative Circulation Timeline</span>
           </div>
           <CardContent className="px-5 py-4">
-            <div className="h-64">
+            <div className="h-52 sm:h-64">
               {loading ? <ChartSkeleton /> : <CirculationTimeline records={chartRecords} />}
             </div>
           </CardContent>
@@ -199,21 +199,23 @@ export default function InventoryPageContent({ initialRecords }: { initialRecord
 
       {/* ── Team Overview ────────────────────────────────────────────────────── */}
       <section>
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-xs font-semibold">Team Overview</span>
-          <span className="text-[10px] text-muted-foreground">{summaries.length} teams</span>
-          <div className="ml-auto relative w-48">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold">Team Overview</span>
+            <span className="text-[10px] text-muted-foreground">{summaries.length} teams</span>
+          </div>
+          <div className="relative w-full sm:w-52 sm:ml-auto">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               value={teamSearch}
               onChange={e => setTeamSearch(e.target.value)}
               placeholder="Search teams…"
-              className="h-7 pl-7 text-xs"
+              className="h-9 pl-7 text-sm w-full"
             />
             {teamSearch && (
               <button onClick={() => setTeamSearch('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                <X size={11} />
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1">
+                <X size={12} />
               </button>
             )}
           </div>

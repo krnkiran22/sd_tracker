@@ -338,7 +338,7 @@ export default function LogArrivalPage() {
             </div>
 
             {/* Who is receiving */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
               <div>
                 <label className="text-label block mb-1">
                   Who is Receiving? <span className="text-destructive">*</span>
@@ -349,7 +349,7 @@ export default function LogArrivalPage() {
                 <select
                   value={receivedBy}
                   onChange={e => setReceivedBy(e.target.value)}
-                  className="w-full h-9 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring rounded"
+                  className="w-full h-10 border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring rounded"
                 >
                   <option value="">— Select receiver —</option>
                   <option value="Amaan">Amaan</option>
@@ -442,55 +442,57 @@ export default function LogArrivalPage() {
               {sortedPackets.length} / {allPackets.length}
             </Badge>
           )}
-          <button onClick={loadLog} className="text-muted-foreground hover:text-foreground transition-colors" title="Refresh">
-            <RefreshCw size={11} className={loadingLog ? 'animate-spin' : ''} />
+          <button onClick={loadLog}
+            className="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded min-w-[36px] min-h-[36px] flex items-center justify-center"
+            title="Refresh">
+            <RefreshCw size={13} className={loadingLog ? 'animate-spin' : ''} />
           </button>
         </div>
 
         {/* Search + filter bar */}
         <div className="px-4 py-3 border-b border-border flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1 max-w-xs">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-0">
               <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <Input value={logSearch} onChange={e => setLogSearch(e.target.value)}
-                placeholder="Search team…" className="h-8 pl-8 text-xs" />
+                placeholder="Search team…" className="h-9 pl-8 text-sm w-full" />
               {logSearch && (
                 <button onClick={() => setLogSearch('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  <X size={11} />
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1">
+                  <X size={12} />
                 </button>
               )}
             </div>
             <button onClick={() => setShowLogFilter(v => !v)}
-              className={`flex items-center gap-1.5 h-8 px-3 text-xs border rounded transition-colors ${
+              className={`flex items-center gap-1.5 h-9 px-3 text-xs border rounded transition-colors shrink-0 ${
                 showLogFilter || logActiveFilters > 0
                   ? 'border-foreground bg-foreground text-background'
                   : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground'
               }`}>
-              <SlidersHorizontal size={11} />
+              <SlidersHorizontal size={12} />
               Filters
               {logActiveFilters > 0 && (
-                <span className="bg-background text-foreground rounded-full px-1 text-[9px] font-bold leading-none py-0.5">
+                <span className="bg-background text-foreground rounded-full px-1.5 text-[10px] font-bold leading-none py-0.5">
                   {logActiveFilters}
                 </span>
               )}
             </button>
             {logActiveFilters > 0 && (
               <button onClick={() => { setLogSearch(''); setLogStatus('all'); setLogFrom(''); setLogTo('') }}
-                className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-1">
-                <X size={10} /> Clear
+                className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1 shrink-0">
+                <X size={12} /> Clear
               </button>
             )}
-            <span className="ml-auto text-[10px] text-muted-foreground">
+            <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
               {sortedPackets.length} / {allPackets.length} rows
             </span>
           </div>
           {showLogFilter && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 border-t border-border/50">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-border/50">
               <div>
                 <label className="text-[10px] text-muted-foreground block mb-1">Status</label>
                 <select value={logStatus} onChange={e => setLogStatus(e.target.value)}
-                  className="w-full h-8 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring rounded">
+                  className="w-full h-10 border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring rounded">
                   <option value="all">All Statuses</option>
                   {Object.entries(STATUS_LABELS).map(([k, v]) => (
                     <option key={k} value={k}>{v.label}</option>
@@ -499,11 +501,11 @@ export default function LogArrivalPage() {
               </div>
               <div>
                 <label className="text-[10px] text-muted-foreground block mb-1">From Date</label>
-                <Input type="date" value={logFrom} onChange={e => setLogFrom(e.target.value)} className="h-8 text-xs" />
+                <Input type="date" value={logFrom} onChange={e => setLogFrom(e.target.value)} className="h-10 text-sm" />
               </div>
               <div>
                 <label className="text-[10px] text-muted-foreground block mb-1">To Date</label>
-                <Input type="date" value={logTo} onChange={e => setLogTo(e.target.value)} className="h-8 text-xs" />
+                <Input type="date" value={logTo} onChange={e => setLogTo(e.target.value)} className="h-10 text-sm" />
               </div>
             </div>
           )}

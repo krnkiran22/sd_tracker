@@ -97,21 +97,24 @@ function PacketsAdmin() {
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <div className="relative">
-          <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+        <div className="relative flex-1 sm:max-w-[200px]">
+          <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search team…"
-            className="h-7 pl-7 pr-2 text-[11px] border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-40" />
+            className="h-9 pl-7 pr-2 text-xs border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-full" />
         </div>
         <select value={statusF} onChange={e => setStatusF(e.target.value)}
-          className="h-7 border border-input bg-background px-2 text-[11px] rounded focus:outline-none focus:ring-1 focus:ring-ring">
+          className="h-9 border border-input bg-background px-2 text-xs rounded focus:outline-none focus:ring-1 focus:ring-ring w-full sm:w-auto">
           <option value="all">All Status</option>
           <option value="received">Received</option>
           <option value="processing">Processing</option>
           <option value="completed">Completed</option>
         </select>
         <span className="text-[10px] text-muted-foreground">{filtered.length} / {rows.length}</span>
-        <button onClick={load} className="ml-auto text-muted-foreground hover:text-foreground"><RefreshCw size={11} /></button>
+        <button onClick={load}
+          className="ml-auto text-muted-foreground hover:text-foreground p-2 hover:bg-muted rounded min-w-[36px] min-h-[36px] flex items-center justify-center">
+          <RefreshCw size={13} />
+        </button>
       </div>
       <table className="w-full text-[11px]">
         <thead>
@@ -228,14 +231,14 @@ function IngestionAdmin() {
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
         <div className="relative">
           <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search team…"
-            className="h-7 pl-7 pr-2 text-[11px] border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-40" />
+            className="h-9 pl-7 pr-2 text-xs border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-full sm:max-w-[200px]" />
         </div>
         <span className="text-[10px] text-muted-foreground">{filteredIng.length} / {rows.length} records</span>
-        <button onClick={load} className="ml-auto text-muted-foreground hover:text-foreground"><RefreshCw size={11} /></button>
+        <button onClick={load} className="ml-auto text-muted-foreground hover:text-foreground p-2 hover:bg-muted rounded min-w-[36px] min-h-[36px] flex items-center justify-center"><RefreshCw size={13} /></button>
       </div>
       <table className="w-full text-[11px]">
         <thead>
@@ -344,11 +347,11 @@ function TeamsAdmin() {
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
         <div className="relative">
           <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search team…"
-            className="h-7 pl-7 pr-2 text-[11px] border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-40" />
+            className="h-9 pl-7 pr-2 text-xs border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-full sm:max-w-[200px]" />
         </div>
         <span className="text-[10px] text-muted-foreground">{filteredTeams.length} / {rows.length} teams</span>
         <div className="ml-auto flex items-center gap-2">
@@ -480,11 +483,11 @@ function UsersAdmin() {
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
         <div className="relative">
           <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name / email…"
-            className="h-7 pl-7 pr-2 text-[11px] border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-44" />
+            className="h-9 pl-7 pr-2 text-xs border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-full sm:max-w-[220px]" />
         </div>
         <select value={roleF} onChange={e => setRoleF(e.target.value)}
           className="h-7 border border-input bg-background px-2 text-[11px] rounded focus:outline-none focus:ring-1 focus:ring-ring">
@@ -494,7 +497,7 @@ function UsersAdmin() {
           ))}
         </select>
         <span className="text-[10px] text-muted-foreground">{filteredUsers.length} / {rows.length} users</span>
-        <button onClick={load} className="ml-auto text-muted-foreground hover:text-foreground"><RefreshCw size={11} /></button>
+        <button onClick={load} className="ml-auto text-muted-foreground hover:text-foreground p-2 hover:bg-muted rounded min-w-[36px] min-h-[36px] flex items-center justify-center"><RefreshCw size={13} /></button>
       </div>
       <table className="w-full text-[11px]">
         <thead>
@@ -568,15 +571,16 @@ export default function AdminPanel() {
 
   return (
     <Card className="gap-0 py-0 border-red-200/60">
-      <div className="px-4 py-3 border-b border-border flex items-center gap-2 flex-wrap">
-        <ShieldAlert size={14} className="text-red-500" />
-        <span className="text-xs font-semibold">Admin Panel</span>
-        <span className="text-border">·</span>
-        <span className="text-[10px] text-muted-foreground">Full CRUD access to all tables</span>
-        <div className="ml-auto flex items-center gap-1">
+      <div className="px-4 py-3 border-b border-border flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <ShieldAlert size={14} className="text-red-500" />
+          <span className="text-xs font-semibold">Admin Panel</span>
+          <span className="text-[10px] text-muted-foreground hidden sm:inline">· Full CRUD access to all tables</span>
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
           {tabs.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
-              className={`px-2.5 py-1 text-[10px] font-semibold rounded border transition-colors ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded border transition-colors min-h-[36px] ${
                 tab === t.key ? t.color : 'text-muted-foreground border-transparent hover:bg-muted'
               }`}>
               {t.label}

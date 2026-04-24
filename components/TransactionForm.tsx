@@ -145,12 +145,12 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
   return (
     <Card className="py-4 gap-0">
       <CardHeader className="pb-3 border-b border-border">
-        <CardTitle className="flex items-center gap-3">
+        <CardTitle className="flex flex-wrap items-center gap-3">
           Record Transaction
           <div className="flex border border-border ml-auto">
             {(['sent', 'received'] as const).map(t => (
               <button key={t} type="button" onClick={() => setType(t)}
-                className={`px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors min-h-[40px] ${
                   type === t ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted'
                 }`}>
                 {t === 'sent' ? '↑ Sent' : '↓ Received'}
@@ -198,16 +198,17 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
               {ITEMS.map(item => (
                 <div key={item.key}
-                  className={`border p-2 flex flex-col gap-1 transition-colors ${
+                  className={`border p-3 flex flex-col gap-2 transition-colors ${
                     items[item.key as ItemKey] > 0 ? 'border-foreground bg-muted/50' : 'border-border'
                   }`}>
-                  <label className="text-label">{item.label}</label>
+                  <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground leading-tight">{item.label}</label>
                   <input
                     type="number" min={0}
+                    inputMode="numeric"
                     value={items[item.key as ItemKey] || ''}
                     placeholder="0"
                     onChange={e => setItem(item.key as ItemKey, Number(e.target.value))}
-                    className="w-full bg-transparent text-sm font-semibold tabular-nums focus:outline-none"
+                    className="w-full bg-transparent text-base font-semibold tabular-nums focus:outline-none h-8"
                   />
                 </div>
               ))}
@@ -253,13 +254,13 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
               ) : (
                 /* Two buttons: camera + gallery */
                 <div className="flex gap-2">
-                  <Button type="button" variant="outline" size="sm" className="flex-1 gap-1.5"
+                  <Button type="button" variant="outline" className="flex-1 gap-1.5 h-10"
                     onClick={() => cameraRef.current?.click()}>
-                    <Camera size={12} /> Camera
+                    <Camera size={14} /> Camera
                   </Button>
-                  <Button type="button" variant="outline" size="sm" className="flex-1 gap-1.5"
+                  <Button type="button" variant="outline" className="flex-1 gap-1.5 h-10"
                     onClick={() => galleryRef.current?.click()}>
-                    <ImageIcon size={12} /> Gallery
+                    <ImageIcon size={14} /> Gallery
                   </Button>
                 </div>
               )}

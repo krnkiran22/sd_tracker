@@ -129,7 +129,7 @@ function CountRepackModal({
             <select
               value={countedBy}
               onChange={e => setCountedBy(e.target.value)}
-              className="w-full h-9 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring rounded"
+              className="w-full h-11 border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring rounded"
             >
               <option value="">— Select counter —</option>
               <option value="Amaan">Amaan</option>
@@ -158,14 +158,13 @@ function CountRepackModal({
           {error && <p className="text-[10px] text-destructive">{error}</p>}
 
           <div className="flex gap-2 pt-1">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="flex-1">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1 h-11">
               Cancel
             </Button>
             <Button
               type="submit"
-              size="sm"
               disabled={loading}
-              className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+              className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700 text-white h-11"
             >
               {loading
                 ? <Loader2 size={12} className="animate-spin" />
@@ -216,23 +215,23 @@ export default function PendingPage() {
         )}
         <button
           onClick={loadPending}
-          className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
+          className="ml-auto text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded min-w-[36px] min-h-[36px] flex items-center justify-center"
           title="Refresh"
         >
-          <RefreshCw size={11} className={loadingList ? 'animate-spin' : ''} />
+          <RefreshCw size={13} className={loadingList ? 'animate-spin' : ''} />
         </button>
       </div>
 
       {/* ── Search ───────────────────────────────────────────────────── */}
       {pending.length > 0 && (
-        <div className="relative max-w-xs">
+        <div className="relative w-full sm:max-w-xs">
           <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search team…"
-            className="h-8 pl-8 text-xs" />
+            className="h-10 pl-8 text-sm w-full" />
           {search && (
             <button onClick={() => setSearch('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              <X size={11} />
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1">
+              <X size={12} />
             </button>
           )}
         </div>
@@ -275,25 +274,21 @@ export default function PendingPage() {
                 <button
                   key={p.id}
                   onClick={() => setSelectedPacket(p)}
-                  className="flex items-center gap-3 py-3.5 px-1 text-left hover:bg-amber-50/60 transition-colors rounded group"
+                  className="flex items-center gap-3 py-4 px-2 text-left hover:bg-amber-50/60 active:bg-amber-100/80 transition-colors rounded group min-h-[64px]"
                 >
-                  <div className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{p.team_name}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      Received {fmtDate(p.date_received)}
-                      <span className="mx-1.5 text-border">·</span>
+                    <p className="text-xs text-muted-foreground mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
+                      <span>Received {fmtDate(p.date_received)}</span>
                       <span className="text-amber-600 font-medium">{timeSince(p.created_at)}</span>
                       {p.poc_phones && (
-                        <>
-                          <span className="mx-1.5 text-border">·</span>
-                          <span className="text-green-700">📱 {p.poc_phones}</span>
-                        </>
+                        <span className="text-green-700">📱 {p.poc_phones}</span>
                       )}
                     </p>
                   </div>
-                  <span className="text-[10px] font-medium text-blue-600 group-hover:underline flex items-center gap-0.5 shrink-0">
-                    Count &amp; Repack <ChevronRight size={11} />
+                  <span className="text-xs font-semibold text-blue-600 group-hover:underline flex items-center gap-0.5 shrink-0 bg-blue-50 px-2.5 py-1.5 rounded-full">
+                    Count &amp; Repack <ChevronRight size={13} />
                   </span>
                 </button>
               ))}
