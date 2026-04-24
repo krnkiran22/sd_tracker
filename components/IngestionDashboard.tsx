@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import {
   Package, Loader2, CheckCircle, Clock, RefreshCw,
-  ChevronDown, ChevronUp, AlertCircle,
+  ChevronDown, ChevronUp, AlertCircle, Search, X,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -20,10 +20,11 @@ export default function IngestionDashboard() {
   const [packets, setPackets]       = useState<SdPacket[]>([])
   const [ingestions, setIngestions] = useState<Record<number, IngestionRecord>>({})
   const [loading, setLoading]       = useState(true)
-  const [activeForm, setActiveForm] = useState<number | null>(null)   // packet.id for which form is open
-  const [expandedId, setExpandedId] = useState<number | null>(null)   // completed detail expand
+  const [activeForm, setActiveForm] = useState<number | null>(null)
+  const [expandedId, setExpandedId] = useState<number | null>(null)
   const [acknowledging, setAcknowledging] = useState<number | null>(null)
   const [ackSuccess, setAckSuccess] = useState<number | null>(null)
+  const [completedSearch, setCompletedSearch] = useState('')
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
@@ -68,6 +69,11 @@ export default function IngestionDashboard() {
   const received   = packets.filter(p => p.status === 'received')
   const processing = packets.filter(p => p.status === 'processing')
   const completed  = packets.filter(p => p.status === 'completed')
+  const filteredCompleted = useMemo(() =>
+    completedSearch
+      ? completed.filter(p => p.team_name.toLowerCase().includes(completedSearch.toLowerCase()))
+      : completed
+  , [completed, completedSearch])
 
   if (loading) {
     return (
@@ -235,7 +241,7 @@ export default function IngestionDashboard() {
           <span className="text-xs font-semibold">Completed</span>
           {completed.length > 0 && (
             <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50">
-              {completed.length}
+              {filteredCompleted.length} / {completed.length}
             </Badge>
           )}
         </div>
@@ -246,6 +252,21 @@ export default function IngestionDashboard() {
           </CardContent></Card>
         ) : (
           <Card className="gap-0 py-0">
+            {/* Search bar */}
+            <div className="px-4 py-2.5 border-b border-border">
+              <div className="relative max-w-xs">
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <input value={completedSearch} onChange={e => setCompletedSearch(e.target.value)}
+                  placeholder="Search team…"
+                  className="h-7 pl-8 pr-8 text-xs w-full border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring" />
+                {completedSearch && (
+                  <button onClick={() => setCompletedSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X size={11} />
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
@@ -256,7 +277,7 @@ export default function IngestionDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {completed.map(p => {
+                  {filteredCompleted.map(p => {
                     const rec = ingestions[p.id]
                     const isExpanded = expandedId === p.id
                     return [

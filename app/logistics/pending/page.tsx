@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import {
-  Clock, Loader2, CheckCircle2, ChevronRight, X, RefreshCw,
+  Clock, Loader2, CheckCircle2, ChevronRight, X, RefreshCw, Search,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -157,6 +157,7 @@ export default function PendingPage() {
   const [pending, setPending]               = useState<LogisticsPacket[]>([])
   const [loadingList, setLoadingList]       = useState(true)
   const [selectedPacket, setSelectedPacket] = useState<LogisticsPacket | null>(null)
+  const [search, setSearch]                 = useState('')
 
   const loadPending = useCallback(async () => {
     setLoadingList(true)
@@ -170,6 +171,10 @@ export default function PendingPage() {
 
   useEffect(() => { loadPending() }, [loadPending])
 
+  const filteredPending = search
+    ? pending.filter(p => p.team_name.toLowerCase().includes(search.toLowerCase()))
+    : pending
+
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
 
@@ -179,7 +184,7 @@ export default function PendingPage() {
         <span className="text-sm font-semibold">Pending Count &amp; Repack</span>
         {!loadingList && pending.length > 0 && (
           <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50 text-[10px]">
-            {pending.length}
+            {filteredPending.length}{search ? ` / ${pending.length}` : ''}
           </Badge>
         )}
         <button
@@ -190,6 +195,21 @@ export default function PendingPage() {
           <RefreshCw size={11} className={loadingList ? 'animate-spin' : ''} />
         </button>
       </div>
+
+      {/* ── Search ───────────────────────────────────────────────────── */}
+      {pending.length > 0 && (
+        <div className="relative max-w-xs">
+          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search team…"
+            className="h-8 pl-8 text-xs" />
+          {search && (
+            <button onClick={() => setSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X size={11} />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ── Pending list ─────────────────────────────────────────────── */}
       <Card className="py-4 gap-0 border-amber-200/60 bg-amber-50/20">
@@ -219,7 +239,12 @@ export default function PendingPage() {
             </div>
           ) : (
             <div className="flex flex-col divide-y divide-border/50">
-              {pending.map(p => (
+              {filteredPending.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-6 text-center">
+                  No packets matching &ldquo;{search}&rdquo;
+                </p>
+              ) : null}
+              {filteredPending.map(p => (
                 <button
                   key={p.id}
                   onClick={() => setSelectedPacket(p)}

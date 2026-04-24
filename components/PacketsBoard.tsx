@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { Package, Clock, CheckCircle, Loader2, RefreshCw } from 'lucide-react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
+import { Package, Clock, CheckCircle, Loader2, RefreshCw, Search, X } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { SdPacket, PacketStatus } from '@/lib/types'
@@ -25,6 +25,7 @@ export default function PacketsBoard({ refreshTrigger }: PacketsBoardProps) {
   const [packets, setPackets]   = useState<SdPacket[]>([])
   const [loading, setLoading]   = useState(true)
   const [filter, setFilter]     = useState<PacketStatus | 'all'>('all')
+  const [search, setSearch]     = useState('')
 
   const fetchPackets = useCallback(async () => {
     setLoading(true)
@@ -46,27 +47,47 @@ export default function PacketsBoard({ refreshTrigger }: PacketsBoardProps) {
     completed:  packets.filter(p => p.status === 'completed').length,
   }
 
-  const visible = filter === 'all' ? packets : packets.filter(p => p.status === filter)
+  const visible = useMemo(() => {
+    return packets.filter(p => {
+      if (filter !== 'all' && p.status !== filter) return false
+      if (search && !p.team_name.toLowerCase().includes(search.toLowerCase())) return false
+      return true
+    })
+  }, [packets, filter, search])
 
   return (
     <Card className="gap-0 py-0">
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold">SD Card Packets</span>
-          <Badge variant="outline">{packets.length} total</Badge>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <button onClick={fetchPackets} className="text-muted-foreground hover:text-foreground transition-colors p-1">
-            <RefreshCw size={11} />
-          </button>
-          {(['all', 'received', 'processing', 'completed'] as const).map(s => (
-            <button key={s} onClick={() => setFilter(s)}
-              className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded transition-colors ${
-                filter === s ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted'
-              }`}>
-              {s === 'all' ? `All (${counts.all})` : `${s} (${counts[s]})`}
+      <div className="px-4 py-3 border-b border-border flex flex-col gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold">SD Card Packets</span>
+            <Badge variant="outline">{visible.length} / {packets.length}</Badge>
+          </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button onClick={fetchPackets} className="text-muted-foreground hover:text-foreground transition-colors p-1">
+              <RefreshCw size={11} />
             </button>
-          ))}
+            {(['all', 'received', 'processing', 'completed'] as const).map(s => (
+              <button key={s} onClick={() => setFilter(s)}
+                className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded transition-colors ${
+                  filter === s ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted'
+                }`}>
+                {s === 'all' ? `All (${counts.all})` : `${s} (${counts[s]})`}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Team search */}
+        <div className="relative max-w-xs">
+          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search team…"
+            className="h-7 pl-8 pr-8 text-xs w-full border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring" />
+          {search && (
+            <button onClick={() => setSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X size={11} />
+            </button>
+          )}
         </div>
       </div>
 

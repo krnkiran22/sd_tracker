@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Package, X, Plus, Loader2, RefreshCw,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, Search, SlidersHorizontal,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -69,9 +69,14 @@ export default function LogArrivalPage() {
   const [submitOk, setSubmitOk]       = useState(false)
 
   // ── Arrivals log state ─────────────────────────────────────────────────────
-  const [allPackets, setAllPackets] = useState<LogisticsPacket[]>([])
-  const [loadingLog, setLoadingLog] = useState(true)
-  const [sortDesc, setSortDesc]     = useState(true)
+  const [allPackets, setAllPackets]   = useState<LogisticsPacket[]>([])
+  const [loadingLog, setLoadingLog]   = useState(true)
+  const [sortDesc, setSortDesc]       = useState(true)
+  const [logSearch, setLogSearch]     = useState('')
+  const [logStatus, setLogStatus]     = useState('all')
+  const [logFrom, setLogFrom]         = useState('')
+  const [logTo, setLogTo]             = useState('')
+  const [showLogFilter, setShowLogFilter] = useState(false)
 
   // ── Load teams ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -162,11 +167,23 @@ export default function LogArrivalPage() {
     }
   }
 
-  const sortedPackets = [...allPackets].sort((a, b) =>
-    sortDesc
-      ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      : new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  )
+  const sortedPackets = [...allPackets]
+    .filter(p => {
+      if (logSearch && !p.team_name.toLowerCase().includes(logSearch.toLowerCase())) return false
+      if (logStatus !== 'all' && p.status !== logStatus) return false
+      const d = String(p.date_received).slice(0, 10)
+      if (logFrom && d < logFrom) return false
+      if (logTo   && d > logTo)   return false
+      return true
+    })
+    .sort((a, b) =>
+      sortDesc
+        ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        : new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )
+
+  const logActiveFilters = (logSearch ? 1 : 0) + (logStatus !== 'all' ? 1 : 0) +
+    (logFrom ? 1 : 0) + (logTo ? 1 : 0)
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
@@ -295,78 +312,122 @@ export default function LogArrivalPage() {
       </Card>
 
       {/* ── Arrivals log table ────────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
+      <Card className="gap-0 py-0 overflow-hidden">
+        {/* Header row */}
+        <div className="px-4 py-3 border-b border-border flex items-center gap-2 flex-wrap">
           <span className="text-xs font-semibold">All Arrivals Log</span>
           {!loadingLog && (
             <Badge variant="outline" className="text-[10px] text-muted-foreground">
-              {allPackets.length} entries
+              {sortedPackets.length} / {allPackets.length}
             </Badge>
           )}
-          <button
-            onClick={loadLog}
-            className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
-            title="Refresh"
-          >
+          <button onClick={loadLog} className="text-muted-foreground hover:text-foreground transition-colors" title="Refresh">
             <RefreshCw size={11} className={loadingLog ? 'animate-spin' : ''} />
           </button>
         </div>
 
+        {/* Search + filter bar */}
+        <div className="px-4 py-3 border-b border-border flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 max-w-xs">
+              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <Input value={logSearch} onChange={e => setLogSearch(e.target.value)}
+                placeholder="Search team…" className="h-8 pl-8 text-xs" />
+              {logSearch && (
+                <button onClick={() => setLogSearch('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X size={11} />
+                </button>
+              )}
+            </div>
+            <button onClick={() => setShowLogFilter(v => !v)}
+              className={`flex items-center gap-1.5 h-8 px-3 text-xs border rounded transition-colors ${
+                showLogFilter || logActiveFilters > 0
+                  ? 'border-foreground bg-foreground text-background'
+                  : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground'
+              }`}>
+              <SlidersHorizontal size={11} />
+              Filters
+              {logActiveFilters > 0 && (
+                <span className="bg-background text-foreground rounded-full px-1 text-[9px] font-bold leading-none py-0.5">
+                  {logActiveFilters}
+                </span>
+              )}
+            </button>
+            {logActiveFilters > 0 && (
+              <button onClick={() => { setLogSearch(''); setLogStatus('all'); setLogFrom(''); setLogTo('') }}
+                className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-1">
+                <X size={10} /> Clear
+              </button>
+            )}
+            <span className="ml-auto text-[10px] text-muted-foreground">
+              {sortedPackets.length} / {allPackets.length} rows
+            </span>
+          </div>
+          {showLogFilter && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 border-t border-border/50">
+              <div>
+                <label className="text-[10px] text-muted-foreground block mb-1">Status</label>
+                <select value={logStatus} onChange={e => setLogStatus(e.target.value)}
+                  className="w-full h-8 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring rounded">
+                  <option value="all">All Statuses</option>
+                  {Object.entries(STATUS_LABELS).map(([k, v]) => (
+                    <option key={k} value={k}>{v.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground block mb-1">From Date</label>
+                <Input type="date" value={logFrom} onChange={e => setLogFrom(e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground block mb-1">To Date</label>
+                <Input type="date" value={logTo} onChange={e => setLogTo(e.target.value)} className="h-8 text-xs" />
+              </div>
+            </div>
+          )}
+        </div>
+
         {loadingLog ? (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground py-8">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground py-8 px-4">
             <Loader2 size={14} className="animate-spin" /> Loading arrivals log…
           </div>
         ) : allPackets.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center text-xs text-muted-foreground">
-              No arrivals logged yet.
-            </CardContent>
-          </Card>
+          <div className="py-8 text-center text-xs text-muted-foreground">No arrivals logged yet.</div>
+        ) : sortedPackets.length === 0 ? (
+          <div className="py-8 text-center text-xs text-muted-foreground">No records match filters.</div>
         ) : (
-          <Card className="gap-0 py-0 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border bg-muted/30 text-left">
-                    <th className="px-3 py-2 font-semibold text-muted-foreground">#</th>
-                    <th className="px-3 py-2 font-semibold text-muted-foreground">Team</th>
-                    <th className="px-3 py-2 font-semibold text-muted-foreground whitespace-nowrap">Date Received</th>
-                    <th className="px-3 py-2 font-semibold text-muted-foreground">Status</th>
-                    <th className="px-3 py-2 font-semibold text-muted-foreground whitespace-nowrap">WhatsApp Nos.</th>
-                    <th
-                      className="px-3 py-2 font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none hover:text-foreground"
-                      onClick={() => setSortDesc(d => !d)}
-                    >
-                      Logged At {sortDesc ? <ChevronDown size={10} className="inline" /> : <ChevronUp size={10} className="inline" />}
-                    </th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border bg-muted/30 text-left">
+                  <th className="px-3 py-2.5 font-semibold text-muted-foreground">#</th>
+                  <th className="px-3 py-2.5 font-semibold text-muted-foreground">Team</th>
+                  <th className="px-3 py-2.5 font-semibold text-muted-foreground whitespace-nowrap">Date Received</th>
+                  <th className="px-3 py-2.5 font-semibold text-muted-foreground">Status</th>
+                  <th className="px-3 py-2.5 font-semibold text-muted-foreground whitespace-nowrap">WhatsApp Nos.</th>
+                  <th className="px-3 py-2.5 font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none hover:text-foreground"
+                    onClick={() => setSortDesc(d => !d)}>
+                    Logged At {sortDesc ? <ChevronDown size={10} className="inline" /> : <ChevronUp size={10} className="inline" />}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedPackets.map(p => (
+                  <tr key={p.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors">
+                    <td className="px-3 py-2 font-mono text-muted-foreground">{p.id}</td>
+                    <td className="px-3 py-2 font-medium">{p.team_name}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{fmtDate(p.date_received)}</td>
+                    <td className="px-3 py-2"><StatusBadge status={p.status} /></td>
+                    <td className="px-3 py-2 text-muted-foreground max-w-[140px] truncate">{p.poc_phones || '—'}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">{fmtDateTime(p.created_at)}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {sortedPackets.map(p => (
-                    <tr
-                      key={p.id}
-                      className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors"
-                    >
-                      <td className="px-3 py-2 font-mono text-muted-foreground">{p.id}</td>
-                      <td className="px-3 py-2 font-medium">{p.team_name}</td>
-                      <td className="px-3 py-2 whitespace-nowrap">{fmtDate(p.date_received)}</td>
-                      <td className="px-3 py-2">
-                        <StatusBadge status={p.status} />
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground max-w-[140px] truncate">
-                        {p.poc_phones || '—'}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
-                        {fmtDateTime(p.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </Card>
 
     </div>
   )

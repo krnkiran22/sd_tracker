@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Pencil, Trash2, Check, X, Loader2, RefreshCw, ShieldAlert } from 'lucide-react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Pencil, Trash2, Check, X, Loader2, RefreshCw, ShieldAlert, Search } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -44,6 +44,8 @@ function PacketsAdmin() {
   const [editing, setEditing] = useState<number | null>(null)
   const [draft, setDraft]     = useState<Partial<SdPacket>>({})
   const [saving, setSaving]   = useState(false)
+  const [search, setSearch]   = useState('')
+  const [statusF, setStatusF] = useState('all')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -85,13 +87,31 @@ function PacketsAdmin() {
     />
   )
 
+  const filtered = useMemo(() => rows.filter(r => {
+    if (search && !r.team_name.toLowerCase().includes(search.toLowerCase())) return false
+    if (statusF !== 'all' && r.status !== statusF) return false
+    return true
+  }), [rows, search, statusF])
+
   if (loading) return <div className="flex items-center gap-2 text-xs text-muted-foreground py-6"><Loader2 size={12} className="animate-spin" /> Loading…</div>
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] text-muted-foreground">{rows.length} packets</span>
-        <button onClick={load} className="text-muted-foreground hover:text-foreground"><RefreshCw size={11} /></button>
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="relative">
+          <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search team…"
+            className="h-7 pl-7 pr-2 text-[11px] border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-40" />
+        </div>
+        <select value={statusF} onChange={e => setStatusF(e.target.value)}
+          className="h-7 border border-input bg-background px-2 text-[11px] rounded focus:outline-none focus:ring-1 focus:ring-ring">
+          <option value="all">All Status</option>
+          <option value="received">Received</option>
+          <option value="processing">Processing</option>
+          <option value="completed">Completed</option>
+        </select>
+        <span className="text-[10px] text-muted-foreground">{filtered.length} / {rows.length}</span>
+        <button onClick={load} className="ml-auto text-muted-foreground hover:text-foreground"><RefreshCw size={11} /></button>
       </div>
       <table className="w-full text-[11px]">
         <thead>
@@ -102,7 +122,7 @@ function PacketsAdmin() {
           </tr>
         </thead>
         <tbody>
-          {rows.map(row => {
+          {filtered.map(row => {
             const isEditing = editing === row.id
             return (
               <tr key={row.id} className={`border-b border-border/50 last:border-0 ${isEditing ? 'bg-amber-50/50' : 'hover:bg-muted/30'} transition-colors`}>
@@ -164,6 +184,7 @@ function IngestionAdmin() {
   const [editing, setEditing] = useState<number | null>(null)
   const [draft, setDraft]     = useState<Partial<IngestionRecord>>({})
   const [saving, setSaving]   = useState(false)
+  const [search, setSearch]   = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -199,13 +220,22 @@ function IngestionAdmin() {
       className="h-6 text-[11px] px-1.5 py-0 min-w-[70px]" />
   )
 
+  const filteredIng = useMemo(() => rows.filter(r =>
+    !search || r.team_name.toLowerCase().includes(search.toLowerCase())
+  ), [rows, search])
+
   if (loading) return <div className="flex items-center gap-2 text-xs text-muted-foreground py-6"><Loader2 size={12} className="animate-spin" /> Loading…</div>
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] text-muted-foreground">{rows.length} records</span>
-        <button onClick={load} className="text-muted-foreground hover:text-foreground"><RefreshCw size={11} /></button>
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="relative">
+          <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search team…"
+            className="h-7 pl-7 pr-2 text-[11px] border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-40" />
+        </div>
+        <span className="text-[10px] text-muted-foreground">{filteredIng.length} / {rows.length} records</span>
+        <button onClick={load} className="ml-auto text-muted-foreground hover:text-foreground"><RefreshCw size={11} /></button>
       </div>
       <table className="w-full text-[11px]">
         <thead>
@@ -216,7 +246,7 @@ function IngestionAdmin() {
           </tr>
         </thead>
         <tbody>
-          {rows.map(row => {
+          {filteredIng.map(row => {
             const isEditing = editing === row.id
             return (
               <tr key={row.id} className={`border-b border-border/50 last:border-0 ${isEditing ? 'bg-amber-50/50' : 'hover:bg-muted/30'}`}>
@@ -262,6 +292,7 @@ function TeamsAdmin() {
   const [saving, setSaving]   = useState(false)
   const [newRow, setNewRow]   = useState(false)
   const [newDraft, setNewDraft] = useState<Team>({ name: '', poc_emails: '', poc_phones: '' })
+  const [search, setSearch]   = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -305,13 +336,22 @@ function TeamsAdmin() {
     } finally { setSaving(false) }
   }
 
+  const filteredTeams = useMemo(() => rows.filter(r =>
+    !search || r.name.toLowerCase().includes(search.toLowerCase())
+  ), [rows, search])
+
   if (loading) return <div className="flex items-center gap-2 text-xs text-muted-foreground py-6"><Loader2 size={12} className="animate-spin" /> Loading…</div>
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] text-muted-foreground">{rows.length} teams</span>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="relative">
+          <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search team…"
+            className="h-7 pl-7 pr-2 text-[11px] border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-40" />
+        </div>
+        <span className="text-[10px] text-muted-foreground">{filteredTeams.length} / {rows.length} teams</span>
+        <div className="ml-auto flex items-center gap-2">
           <button onClick={() => setNewRow(v => !v)}
             className="text-[11px] text-blue-600 hover:underline font-medium">+ Add Team</button>
           <button onClick={load} className="text-muted-foreground hover:text-foreground"><RefreshCw size={11} /></button>
@@ -343,7 +383,7 @@ function TeamsAdmin() {
           </tr>
         </thead>
         <tbody>
-          {rows.map(row => {
+          {filteredTeams.map(row => {
             const isEditing = editing === row.name
             return (
               <tr key={row.name} className={`border-b border-border/50 last:border-0 ${isEditing ? 'bg-amber-50/50' : 'hover:bg-muted/30'}`}>
@@ -391,6 +431,8 @@ function UsersAdmin() {
   const [editing, setEditing] = useState<number | null>(null)
   const [draft, setDraft]     = useState<Partial<AppUser>>({})
   const [saving, setSaving]   = useState(false)
+  const [search, setSearch]   = useState('')
+  const [roleF, setRoleF]     = useState('all')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -427,13 +469,32 @@ function UsersAdmin() {
     user:      'bg-gray-100 text-gray-600 border-gray-200',
   }
 
+  const filteredUsers = useMemo(() => rows.filter(r => {
+    if (search && !r.name.toLowerCase().includes(search.toLowerCase()) &&
+        !r.email.toLowerCase().includes(search.toLowerCase())) return false
+    if (roleF !== 'all' && r.role !== roleF) return false
+    return true
+  }), [rows, search, roleF])
+
   if (loading) return <div className="flex items-center gap-2 text-xs text-muted-foreground py-6"><Loader2 size={12} className="animate-spin" /> Loading…</div>
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] text-muted-foreground">{rows.length} users</span>
-        <button onClick={load} className="text-muted-foreground hover:text-foreground"><RefreshCw size={11} /></button>
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="relative">
+          <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name / email…"
+            className="h-7 pl-7 pr-2 text-[11px] border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring w-44" />
+        </div>
+        <select value={roleF} onChange={e => setRoleF(e.target.value)}
+          className="h-7 border border-input bg-background px-2 text-[11px] rounded focus:outline-none focus:ring-1 focus:ring-ring">
+          <option value="all">All Roles</option>
+          {['logistics', 'ingestion', 'admin', 'user'].map(r => (
+            <option key={r} value={r}>{r}</option>
+          ))}
+        </select>
+        <span className="text-[10px] text-muted-foreground">{filteredUsers.length} / {rows.length} users</span>
+        <button onClick={load} className="ml-auto text-muted-foreground hover:text-foreground"><RefreshCw size={11} /></button>
       </div>
       <table className="w-full text-[11px]">
         <thead>
@@ -444,7 +505,7 @@ function UsersAdmin() {
           </tr>
         </thead>
         <tbody>
-          {rows.map(row => {
+          {filteredUsers.map(row => {
             const isEditing = editing === row.id
             return (
               <tr key={row.id} className={`border-b border-border/50 last:border-0 ${isEditing ? 'bg-amber-50/50' : 'hover:bg-muted/30'}`}>
