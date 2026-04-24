@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutDashboard, Package, Boxes, FileText, Inbox, LogOut, Menu } from 'lucide-react'
+import { LayoutDashboard, Package, Boxes, FileText, Inbox, CheckCircle2, Loader2, LogOut, Menu } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { AppSidebar } from '@/components/AppSidebar'
@@ -35,21 +35,46 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }
 
   const navItems: NavItem[] = [
-    ...(isAdmin || isIngestion || isIngestionLead
+    // ── Admin ────────────────────────────────────────────────────────
+    ...(isAdmin
       ? [{ href: '/', label: 'Dashboard', icon: <LayoutDashboard size={14} /> }]
       : []),
     ...(isAdmin
       ? [{ href: '/logistics', label: 'SD Card Logistics', icon: <Package size={14} /> }]
       : []),
-    // Collecting page — ingestion lead collects packets from logistics
-    ...(isAdmin || isIngestionLead
-      ? [{ href: '/collecting', label: 'Collecting', icon: <Inbox size={14} /> }]
+    ...(isAdmin
+      ? [{ href: '/collect-sdc', label: 'Collect SDC', icon: <Inbox size={14} /> }]
       : []),
-    ...(isAdmin || isLogistics
+    ...(isAdmin
+      ? [{ href: '/processing-queue', label: 'Processing Queue', icon: <Loader2 size={14} /> }]
+      : []),
+    ...(isAdmin
+      ? [{ href: '/completed', label: 'Completed', icon: <CheckCircle2 size={14} /> }]
+      : []),
+    ...(isAdmin
       ? [{ href: '/inventory', label: 'Equipment Inventory', icon: <Boxes size={14} /> }]
       : []),
-    ...(isAdmin || isLogistics
+    ...(isAdmin
       ? [{ href: '/report', label: 'Reports', icon: <FileText size={14} /> }]
+      : []),
+
+    // ── Ingestion Lead ────────────────────────────────────────────────
+    ...(isIngestionLead
+      ? [{ href: '/collect-sdc',      label: 'Collect SDC',      icon: <Inbox size={14} /> }]
+      : []),
+    ...(isIngestionLead
+      ? [{ href: '/processing-queue', label: 'Processing Queue', icon: <Loader2 size={14} /> }]
+      : []),
+    ...(isIngestionLead
+      ? [{ href: '/completed',        label: 'Completed',        icon: <CheckCircle2 size={14} /> }]
+      : []),
+
+    // ── Ingestion (regular) ───────────────────────────────────────────
+    ...(isIngestion
+      ? [{ href: '/processing-queue', label: 'Processing Queue', icon: <Loader2 size={14} /> }]
+      : []),
+    ...(isIngestion
+      ? [{ href: '/completed',        label: 'Completed',        icon: <CheckCircle2 size={14} /> }]
       : []),
   ]
 
