@@ -12,10 +12,16 @@ import { apiUrl } from '@/lib/api'
 
 const ITEM_LABELS = ITEMS.map(i => i.label)
 
-export default function ReportPageContent() {
-  const [records, setRecords] = useState<Transaction[]>([])
-  const [teams, setTeams]     = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
+export default function ReportPageContent({
+  initialRecords,
+  initialTeams,
+}: {
+  initialRecords?: Transaction[]
+  initialTeams?: string[]
+}) {
+  const [records, setRecords] = useState<Transaction[]>(initialRecords ?? [])
+  const [teams, setTeams]     = useState<string[]>(initialTeams ?? [])
+  const [loading, setLoading] = useState(false)
   const [exporting, setExp]   = useState(false)
 
   // Server-side filters (applied on fetch)
@@ -50,7 +56,12 @@ export default function ReportPageContent() {
     finally { setLoading(false) }
   }, [fromDate, toDate, teamFilter, typeFilter])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  // Only refetch client-side when there are no server-provided initial records
+  // (user-triggered refetches via "Apply Filters" always work regardless)
+  useEffect(() => {
+    if (!initialRecords) fetchData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Unique handlers from loaded records
   const handlers = useMemo(() => {

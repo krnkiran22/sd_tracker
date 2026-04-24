@@ -76,9 +76,9 @@ function ChartSkeleton() {
   )
 }
 
-export default function InventoryPageContent() {
-  const [records, setRecords]       = useState<Transaction[]>([])
-  const [loading, setLoading]       = useState(true)
+export default function InventoryPageContent({ initialRecords }: { initialRecords?: Transaction[] }) {
+  const [records, setRecords]       = useState<Transaction[]>(initialRecords ?? [])
+  const [loading, setLoading]       = useState(!initialRecords)
   const [teamSearch, setTeamSearch] = useState('')
   const { user } = useAuth()
 
@@ -96,7 +96,10 @@ export default function InventoryPageContent() {
     finally { setLoading(false) }
   }, [])
 
-  useEffect(() => { fetchRecords() }, [fetchRecords])
+  // Only fetch client-side if no server-provided initial data
+  useEffect(() => {
+    if (!initialRecords) fetchRecords()
+  }, [fetchRecords, initialRecords])
 
   const summaries     = buildTeamSummaries(records)
   const teamTxMap     = buildTeamTransactions(records)
