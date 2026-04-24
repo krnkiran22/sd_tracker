@@ -107,11 +107,19 @@ export default function LogArrivalPage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  // Normalise any phone to bare 10 digits for display
+  const to10Digits = (p: string) => {
+    const d = p.replace(/\D/g, '')
+    if (d.length === 12 && d.startsWith('91')) return d.slice(2)
+    if (d.length === 11 && d.startsWith('0'))  return d.slice(1)
+    return d.slice(-10)
+  }
+
   const selectTeam = (team: TeamInfo) => {
     setTeamInput(team.name)
     setShowDropdown(false)
     if (team.poc_phones) {
-      const incoming = team.poc_phones.split(',').map(p => p.trim()).filter(Boolean)
+      const incoming = team.poc_phones.split(',').map(p => to10Digits(p.trim())).filter(p => p.length === 10)
       const current  = pocPhones ? pocPhones.split(',').map(p => p.trim()).filter(Boolean) : []
       setPocPhones(Array.from(new Set([...current, ...incoming])).join(', '))
     }
@@ -139,10 +147,14 @@ export default function LogArrivalPage() {
   const removePhoto = (idx: number) =>
     setPhotoDataUrls(prev => prev.filter((_, i) => i !== idx))
 
+  const [phoneError, setPhoneError] = useState('')
+
   const addPhone = () => {
-    const p = phoneInput.trim()
-    if (!p) return
-    if (!phoneList.includes(p)) setPocPhones([...phoneList, p].join(', '))
+    const digits = phoneInput.replace(/\D/g, '')
+    if (!digits) { setPhoneError(''); setPhoneInput(''); return }
+    if (digits.length !== 10) { setPhoneError('Enter exactly 10 digits.'); return }
+    setPhoneError('')
+    if (!phoneList.includes(digits)) setPocPhones([...phoneList, digits].join(', '))
     setPhoneInput('')
   }
   const removePhone = (phone: string) => setPocPhones(phoneList.filter(p => p !== phone).join(', '))
@@ -164,8 +176,9 @@ export default function LogArrivalPage() {
   const handleLogArrival = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitError('')
-    if (!teamInput.trim()) { setSubmitError('Team name is required.'); return }
-    if (!receivedBy)       { setSubmitError('Please select who is receiving this packet.'); return }
+    if (!teamInput.trim())       { setSubmitError('Team name is required.'); return }
+    if (!receivedBy)             { setSubmitError('Please select who is receiving this packet.'); return }
+    if (photoDataUrls.length === 0) { setSubmitError('At least one photo of the packet is required.'); return }
 
     setSubmitting(true)
     try {
@@ -284,15 +297,22 @@ export default function LogArrivalPage() {
               <div className="flex gap-2">
                 <Input
                   type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
                   value={phoneInput}
-                  onChange={e => setPhoneInput(e.target.value)}
+                  onChange={e => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+                    setPhoneInput(digits)
+                    setPhoneError('')
+                  }}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addPhone() } }}
-                  placeholder="+919876543210 — press Enter to add"
+                  placeholder="10-digit number, e.g. 9876543210"
                 />
                 <Button type="button" variant="outline" size="sm" onClick={addPhone} className="shrink-0">
                   <Plus size={12} />
                 </Button>
               </div>
+              {phoneError && <p className="text-[10px] text-destructive mt-1">{phoneError}</p>}
               {phoneList.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {phoneList.map(phone => (
@@ -300,7 +320,7 @@ export default function LogArrivalPage() {
                       key={phone}
                       className="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] px-2 py-0.5 rounded-full font-medium"
                     >
-                      {phone}
+                      📱 {phone}
                       <button
                         type="button"
                         onClick={() => removePhone(phone)}
@@ -313,7 +333,7 @@ export default function LogArrivalPage() {
                 </div>
               )}
               <p className="text-[10px] text-muted-foreground mt-1">
-                WhatsApp notification will be sent to these numbers immediately on submit.
+                Enter 10-digit mobile number (without +91). +91 is added automatically. Add multiple numbers.
               </p>
             </div>
 
@@ -345,11 +365,10 @@ export default function LogArrivalPage() {
             {/* Photos */}
             <div>
               <label className="text-label block mb-1">
-                Photos
-                <span className="ml-1 text-muted-foreground font-normal">(optional)</span>
+                Photos <span className="text-destructive">*</span>
               </label>
               <p className="text-[10px] text-muted-foreground mb-2">
-                Take a photo of the packet or upload from gallery.
+                Take a photo of the packet before logging. You can add multiple photos.
               </p>
               <input
                 ref={photoInputRef}
@@ -363,15 +382,15 @@ export default function LogArrivalPage() {
               <button
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
-                className="flex items-center gap-2 h-9 px-3 text-xs border border-dashed border-input rounded hover:border-foreground hover:bg-muted/40 transition-colors text-muted-foreground"
+                className="flex items-center gap-2 h-9 px-3 text-xs border border-dashed border-blue-400 rounded hover:border-blue-600 hover:bg-blue-50/60 transition-colors text-blue-600 font-medium"
               >
                 <Camera size={13} />
-                Add Photo
+                {photoDataUrls.length > 0 ? 'Add More Photos' : 'Take / Upload Photo'}
               </button>
               {photoDataUrls.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {photoDataUrls.map((url, idx) => (
-                    <div key={idx} className="relative group">
+                    <div key={idx} className="relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={url}
@@ -381,9 +400,9 @@ export default function LogArrivalPage() {
                       <button
                         type="button"
                         onClick={() => removePhoto(idx)}
-                        className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center shadow"
                       >
-                        <X size={9} />
+                        <X size={10} />
                       </button>
                     </div>
                   ))}
