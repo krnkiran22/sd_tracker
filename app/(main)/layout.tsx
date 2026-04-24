@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { LayoutDashboard, Package, Boxes, FileText, LogOut, Menu } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
@@ -10,7 +9,6 @@ import type { NavItem } from '@/components/AppSidebar'
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth()
-  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   if (!user) return null
@@ -18,11 +16,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const isAdmin     = user.role === 'admin'
   const isLogistics = user.role === 'logistics'
   const isIngestion = user.role === 'ingestion'
-
-  if (isLogistics) {
-    router.replace('/logistics')
-    return null
-  }
 
   const roleBadge: Record<string, string> = {
     admin:     'text-purple-700',
@@ -43,6 +36,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       : []),
     ...(isAdmin || isLogistics
       ? [{ href: '/report', label: 'Reports', icon: <FileText size={14} /> }]
+      : []),
+    // Logistics users: quick link back to their SD card pipeline
+    ...(isLogistics
+      ? [{ href: '/logistics/log-arrival', label: 'SD Card Logistics', icon: <Package size={14} /> }]
       : []),
   ]
 
