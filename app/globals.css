@@ -85,6 +85,11 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Prevent horizontal overflow from sidebar transitions */
+    overflow-x: hidden;
+  }
   * {
     border-color: var(--border);
   }
@@ -94,10 +99,23 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Smooth tap on mobile */
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
   }
   h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
     letter-spacing: -0.02em;
+  }
+  /* Smooth interactive elements globally */
+  button, a, [role="button"] {
+    transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  /* Better touch scrolling on mobile */
+  .overflow-y-auto, .overflow-x-auto, main {
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -110,10 +128,14 @@
     color: var(--muted-foreground);
   }
   .animate-fade-in {
-    animation: fadeIn 0.35s ease-out backwards;
+    animation: fadeIn 0.25s ease-out backwards;
   }
   .animate-slide-up {
-    animation: slideUp 0.35s ease-out backwards;
+    animation: slideUp 0.25s ease-out backwards;
+  }
+  /* Hardware-accelerated hint for sidebar */
+  .will-change-transform {
+    will-change: transform;
   }
 }
 
@@ -124,5 +146,15 @@
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Smooth page content entrance */
+main {
+  animation: pageFadeIn 0.2s ease-out;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }

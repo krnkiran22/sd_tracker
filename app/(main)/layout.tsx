@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutDashboard, Package, Boxes, FileText, LogOut, Menu } from 'lucide-react'
+import { LayoutDashboard, Package, Boxes, FileText, LogOut, Menu, X } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { AppSidebar } from '@/components/AppSidebar'
@@ -74,7 +74,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       {/* Mobile burger button */}
       <button
-        className="md:hidden fixed top-3 left-3 z-40 p-2 rounded-lg bg-card border border-border shadow-sm text-muted-foreground hover:text-foreground transition-colors"
+        className={`md:hidden fixed top-3 left-3 z-40 p-2 rounded-lg bg-card border border-border shadow-sm text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-95 ${sidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         onClick={() => setSidebarOpen(true)}
         aria-label="Open menu"
       >

@@ -78,7 +78,7 @@ export default function LogisticsLayout({ children }: { children: React.ReactNod
 
       {/* ── Mobile: floating burger button ───────────────────────────────────── */}
       <button
-        className="md:hidden fixed top-3 left-3 z-40 p-2 rounded-lg bg-card border border-border shadow-sm text-muted-foreground hover:text-foreground transition-colors"
+        className={`md:hidden fixed top-3 left-3 z-40 p-2 rounded-lg bg-card border border-border shadow-sm text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-95 ${sidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         onClick={() => setSidebarOpen(true)}
         aria-label="Open menu"
       >

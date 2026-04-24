@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { X } from 'lucide-react'
+import { useEffect } from 'react'
 
 export interface NavItem {
   href: string
@@ -15,8 +16,8 @@ interface AppSidebarProps {
   items: NavItem[]
   isOpen: boolean
   onClose: () => void
-  header?: React.ReactNode   // e.g. app title + user info
-  footer?: React.ReactNode   // e.g. logout button
+  header?: React.ReactNode
+  footer?: React.ReactNode
 }
 
 function NavLinks({ items, onClose }: { items: NavItem[]; onClose: () => void }) {
@@ -30,17 +31,17 @@ function NavLinks({ items, onClose }: { items: NavItem[]; onClose: () => void })
             key={item.href}
             href={item.href}
             onClick={onClose}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 active:scale-[0.98] ${
               active
-                ? 'bg-blue-600 text-white font-medium'
+                ? 'bg-blue-600 text-white font-medium shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
           >
-            <span className="shrink-0">{item.icon}</span>
+            <span className="shrink-0 transition-transform duration-150">{item.icon}</span>
             <span className="flex-1 truncate">{item.label}</span>
             {item.badge !== undefined && item.badge > 0 && (
               <span
-                className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full transition-colors duration-150 ${
                   active ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'
                 }`}
               >
@@ -54,78 +55,85 @@ function NavLinks({ items, onClose }: { items: NavItem[]; onClose: () => void })
   )
 }
 
-function SidebarShell({
-  items,
-  onClose,
-  header,
-  footer,
-}: {
-  items: NavItem[]
-  onClose: () => void
-  header?: React.ReactNode
-  footer?: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col h-full">
-      {header && (
-        <div className="px-4 py-4 border-b border-border shrink-0">
-          {header}
-        </div>
-      )}
-      <div className="flex-1 overflow-y-auto">
-        <NavLinks items={items} onClose={onClose} />
-      </div>
-      {footer && (
-        <div className="px-4 py-3 border-t border-border shrink-0">
-          {footer}
-        </div>
-      )}
-    </div>
-  )
-}
-
 export function AppSidebar({ items, isOpen, onClose, header, footer }: AppSidebarProps) {
+  // Lock body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [isOpen])
+
   return (
     <>
-      {/* ── Desktop: fixed sidebar ──────────────────────────────────────────── */}
+      {/* ── Desktop: fixed sidebar ────────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-col w-56 border-r border-border bg-card fixed inset-y-0 left-0 z-30">
-        <SidebarShell items={items} onClose={() => {}} header={header} footer={footer} />
+        <div className="flex flex-col h-full">
+          {header && (
+            <div className="px-4 py-4 border-b border-border shrink-0">
+              {header}
+            </div>
+          )}
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            <NavLinks items={items} onClose={() => {}} />
+          </div>
+          {footer && (
+            <div className="px-4 py-3 border-t border-border shrink-0">
+              {footer}
+            </div>
+          )}
+        </div>
       </aside>
 
-      {/* ── Mobile: slide-in overlay ────────────────────────────────────────── */}
-      {isOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={onClose}
-          />
-          <aside className="relative w-64 bg-card flex flex-col shadow-xl">
-            {/* Close button row */}
-            <div className="flex items-center justify-end px-4 py-3 border-b border-border shrink-0">
-              <button
-                onClick={onClose}
-                className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded"
-                aria-label="Close menu"
-              >
-                <X size={16} />
-              </button>
+      {/* ── Mobile: slide-in overlay — always in DOM, driven by translate ──────── */}
+      <div
+        aria-hidden={!isOpen}
+        className={`md:hidden fixed inset-0 z-50 transition-[visibility] duration-300 ${
+          isOpen ? 'visible' : 'invisible'
+        }`}
+      >
+        {/* Backdrop — fade in/out */}
+        <div
+          className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ease-in-out ${
+            isOpen ? 'opacity-100 backdrop-blur-sm' : 'opacity-0'
+          }`}
+          onClick={onClose}
+        />
+
+        {/* Sidebar panel — slide in from left */}
+        <aside
+          className={`absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-card flex flex-col shadow-2xl
+            transition-transform duration-300 ease-out will-change-transform ${
+            isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          {/* Header + close in one bar */}
+          <div className="flex items-start justify-between gap-2 px-4 py-4 border-b border-border shrink-0">
+            <div className="flex-1 min-w-0">
+              {header}
             </div>
-            <div className="flex-1 overflow-y-auto flex flex-col">
-              {header && (
-                <div className="px-4 py-3 border-b border-border">
-                  {header}
-                </div>
-              )}
-              <NavLinks items={items} onClose={onClose} />
+            <button
+              onClick={onClose}
+              className="shrink-0 mt-0.5 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150"
+              aria-label="Close menu"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            <NavLinks items={items} onClose={onClose} />
+          </div>
+
+          {footer && (
+            <div className="px-4 py-3 border-t border-border shrink-0">
+              {footer}
             </div>
-            {footer && (
-              <div className="px-4 py-3 border-t border-border shrink-0">
-                {footer}
-              </div>
-            )}
-          </aside>
-        </div>
-      )}
+          )}
+        </aside>
+      </div>
     </>
   )
 }
