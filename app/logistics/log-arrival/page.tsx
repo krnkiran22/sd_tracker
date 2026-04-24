@@ -20,7 +20,7 @@ interface LogisticsPacket {
   date_received: string
   status: string
   poc_phones: string
-  entered_by?: string
+  entered_by: string
   created_at: string
 }
 
@@ -63,6 +63,7 @@ export default function LogArrivalPage() {
   const [receivedDate, setReceivedDate] = useState(new Date().toISOString().slice(0, 10))
   const [pocPhones, setPocPhones]       = useState('')
   const [phoneInput, setPhoneInput]     = useState('')
+  const [receivedBy, setReceivedBy]     = useState('')
 
   const [submitting, setSubmitting]   = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -140,6 +141,7 @@ export default function LogArrivalPage() {
     e.preventDefault()
     setSubmitError('')
     if (!teamInput.trim()) { setSubmitError('Team name is required.'); return }
+    if (!receivedBy)       { setSubmitError('Please select who is receiving this packet.'); return }
 
     setSubmitting(true)
     try {
@@ -150,12 +152,12 @@ export default function LogArrivalPage() {
           team_name:     teamInput.trim(),
           received_date: receivedDate,
           poc_phones:    pocPhones,
-          entered_by:    user?.name ?? 'Logistics',
+          entered_by:    receivedBy,
         }),
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error) }
 
-      setTeamInput(''); setPocPhones(''); setPhoneInput('')
+      setTeamInput(''); setPocPhones(''); setPhoneInput(''); setReceivedBy('')
       setReceivedDate(new Date().toISOString().slice(0, 10))
       setSubmitOk(true)
       setTimeout(() => setSubmitOk(false), 4000)
@@ -289,6 +291,30 @@ export default function LogArrivalPage() {
               </p>
             </div>
 
+            {/* Who is receiving */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-label block mb-1">
+                  Who is Receiving? <span className="text-destructive">*</span>
+                </label>
+                <p className="text-[10px] text-muted-foreground mb-1.5">
+                  Person physically receiving the SD card packet at HQ
+                </p>
+                <select
+                  value={receivedBy}
+                  onChange={e => setReceivedBy(e.target.value)}
+                  className="w-full h-9 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring rounded"
+                >
+                  <option value="">— Select receiver —</option>
+                  <option value="Amaan">Amaan</option>
+                  <option value="Nathish">Nathish</option>
+                  {user?.name && !['Amaan', 'Nathish'].includes(user.name) && (
+                    <option value={user.name}>{user.name}</option>
+                  )}
+                </select>
+              </div>
+            </div>
+
             {submitError && <p className="text-[10px] text-destructive">{submitError}</p>}
             {submitOk && (
               <p className="text-[10px] text-green-600 font-medium">
@@ -400,10 +426,11 @@ export default function LogArrivalPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-border bg-muted/30 text-left">
+                  <tr className="border-b border-border bg-muted/30 text-left">
                   <th className="px-3 py-2.5 font-semibold text-muted-foreground">#</th>
                   <th className="px-3 py-2.5 font-semibold text-muted-foreground">Team</th>
                   <th className="px-3 py-2.5 font-semibold text-muted-foreground whitespace-nowrap">Date Received</th>
+                  <th className="px-3 py-2.5 font-semibold text-muted-foreground whitespace-nowrap">Received By</th>
                   <th className="px-3 py-2.5 font-semibold text-muted-foreground">Status</th>
                   <th className="px-3 py-2.5 font-semibold text-muted-foreground whitespace-nowrap">WhatsApp Nos.</th>
                   <th className="px-3 py-2.5 font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none hover:text-foreground"
@@ -418,6 +445,11 @@ export default function LogArrivalPage() {
                     <td className="px-3 py-2 font-mono text-muted-foreground">{p.id}</td>
                     <td className="px-3 py-2 font-medium">{p.team_name}</td>
                     <td className="px-3 py-2 whitespace-nowrap">{fmtDate(p.date_received)}</td>
+                    <td className="px-3 py-2">
+                      {p.entered_by
+                        ? <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-medium rounded-full">{p.entered_by}</span>
+                        : <span className="text-muted-foreground">—</span>}
+                    </td>
                     <td className="px-3 py-2"><StatusBadge status={p.status} /></td>
                     <td className="px-3 py-2 text-muted-foreground max-w-[140px] truncate">{p.poc_phones || '—'}</td>
                     <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">{fmtDateTime(p.created_at)}</td>

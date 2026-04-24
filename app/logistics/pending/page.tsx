@@ -44,16 +44,21 @@ function CountRepackModal({
   onSuccess: () => void
 }) {
   const { user } = useAuth()
-  const [sdCardCount, setSdCardCount]     = useState('')
+  const [sdCardCount, setSdCardCount]       = useState('')
   const [conditionNotes, setConditionNotes] = useState('')
-  const [loading, setLoading]             = useState(false)
-  const [error, setError]                 = useState('')
+  const [countedBy, setCountedBy]           = useState('')
+  const [loading, setLoading]               = useState(false)
+  const [error, setError]                   = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     if (!sdCardCount || Number(sdCardCount) <= 0) {
       setError('Enter the SD card count.')
+      return
+    }
+    if (!countedBy) {
+      setError('Please select who is counting this packet.')
       return
     }
     setLoading(true)
@@ -66,7 +71,7 @@ function CountRepackModal({
           event_data: {
             sd_card_count:   Number(sdCardCount),
             condition_notes: conditionNotes.trim() || null,
-            counted_by:      user?.name ?? 'Logistics',
+            counted_by:      countedBy,
           },
         }),
       })
@@ -112,6 +117,27 @@ function CountRepackModal({
             <p className="text-[10px] text-muted-foreground mt-1">
               Total number of SD cards counted in this packet.
             </p>
+          </div>
+
+          <div>
+            <label className="text-label block mb-1">
+              Who is Counting? <span className="text-destructive">*</span>
+            </label>
+            <p className="text-[10px] text-muted-foreground mb-1.5">
+              Person physically counting and repacking the SD cards
+            </p>
+            <select
+              value={countedBy}
+              onChange={e => setCountedBy(e.target.value)}
+              className="w-full h-9 border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring rounded"
+            >
+              <option value="">— Select counter —</option>
+              <option value="Amaan">Amaan</option>
+              <option value="Nathish">Nathish</option>
+              {user?.name && !['Amaan', 'Nathish'].includes(user.name) && (
+                <option value={user.name}>{user.name}</option>
+              )}
+            </select>
           </div>
 
           <div>
