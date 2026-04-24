@@ -172,21 +172,29 @@ function CountRepackModal({
             </div>
           </div>
 
-          {/* Factory Name */}
-          <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
-              <Factory size={11} /> Factory / Team Name <span className="text-destructive">*</span>
-            </label>
-            <Input
-              type="text"
-              value={factoryName}
-              onChange={e => setFactoryName(e.target.value)}
-              placeholder="e.g. Greybeez"
-              className="h-11"
-            />
-            <p className="text-[10px] text-muted-foreground mt-1">
-              The factory or team this packet belongs to — confirm it matches what was received.
-            </p>
+          {/* Team Name (read-only) + Factory Name */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
+                <User size={11} /> Team Name
+              </label>
+              <div className="h-11 border border-input bg-muted/50 rounded-md px-3 flex items-center text-sm text-muted-foreground select-none">
+                {packet.team_name}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">From arrival log</p>
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
+                <Factory size={11} /> Factory Name <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="text"
+                value={factoryName}
+                onChange={e => setFactoryName(e.target.value)}
+                placeholder="e.g. Greybeez HQ"
+                className="h-11"
+              />
+            </div>
           </div>
 
           {/* Deployment Date */}
