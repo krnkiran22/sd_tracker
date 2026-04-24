@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Package, X, Plus, Loader2, RefreshCw,
-  ChevronDown, ChevronUp, Search, SlidersHorizontal,
+  ChevronDown, ChevronUp, Search, SlidersHorizontal, Camera,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -65,6 +65,10 @@ export default function LogArrivalPage() {
   const [phoneInput, setPhoneInput]     = useState('')
   const [receivedBy, setReceivedBy]     = useState('')
 
+  // Photo state — store as array of base64 data-URLs
+  const [photoDataUrls, setPhotoDataUrls] = useState<string[]>([])
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
   const [submitting, setSubmitting]   = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [submitOk, setSubmitOk]       = useState(false)
@@ -115,6 +119,26 @@ export default function LogArrivalPage() {
 
   const phoneList = pocPhones ? pocPhones.split(',').map(p => p.trim()).filter(Boolean) : []
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
+    Promise.all(
+      files.map(
+        f =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.onerror = reject
+            reader.readAsDataURL(f)
+          })
+      )
+    ).then(urls => setPhotoDataUrls(prev => [...prev, ...urls]))
+    e.target.value = ''
+  }
+
+  const removePhoto = (idx: number) =>
+    setPhotoDataUrls(prev => prev.filter((_, i) => i !== idx))
+
   const addPhone = () => {
     const p = phoneInput.trim()
     if (!p) return
@@ -153,12 +177,14 @@ export default function LogArrivalPage() {
           received_date: receivedDate,
           poc_phones:    pocPhones,
           entered_by:    receivedBy,
+          photo_urls:    photoDataUrls.length > 0 ? JSON.stringify(photoDataUrls) : null,
         }),
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error) }
 
       setTeamInput(''); setPocPhones(''); setPhoneInput(''); setReceivedBy('')
       setReceivedDate(new Date().toISOString().slice(0, 10))
+      setPhotoDataUrls([])
       setSubmitOk(true)
       setTimeout(() => setSubmitOk(false), 4000)
       loadLog()
@@ -314,6 +340,55 @@ export default function LogArrivalPage() {
                   )}
                 </select>
               </div>
+            </div>
+
+            {/* Photos */}
+            <div>
+              <label className="text-label block mb-1">
+                Photos
+                <span className="ml-1 text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <p className="text-[10px] text-muted-foreground mb-2">
+                Take a photo of the packet or upload from gallery.
+              </p>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                className="hidden"
+                onChange={handlePhotoChange}
+              />
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="flex items-center gap-2 h-9 px-3 text-xs border border-dashed border-input rounded hover:border-foreground hover:bg-muted/40 transition-colors text-muted-foreground"
+              >
+                <Camera size={13} />
+                Add Photo
+              </button>
+              {photoDataUrls.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {photoDataUrls.map((url, idx) => (
+                    <div key={idx} className="relative group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt={`Photo ${idx + 1}`}
+                        className="w-20 h-20 object-cover rounded border border-border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(idx)}
+                        className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={9} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {submitError && <p className="text-[10px] text-destructive">{submitError}</p>}
