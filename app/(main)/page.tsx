@@ -19,7 +19,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!user) return
-    if (user.role === 'logistics')       router.replace('/logistics')
+    if (user.role === 'logistics')        router.replace('/logistics')
+    if (user.role === 'logistics_lead')  router.replace('/logs')
     if (user.role === 'ingestion')       router.replace('/processing-queue')
     if (user.role === 'ingestion_lead')  router.replace('/collect-sdc')
   }, [user, router])

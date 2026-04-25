@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'logistics' | 'ingestion' | 'ingestion_lead' | 'user'
+export type Role = 'admin' | 'logistics' | 'logistics_lead' | 'ingestion' | 'ingestion_lead' | 'user'
 
 export const USERS: { email: string; password: string; role: Role; name: string }[] = [
   { email: 'ram@build.ai',       password: 'ram@build.ai', role: 'admin',          name: 'Ram (Admin)'       },

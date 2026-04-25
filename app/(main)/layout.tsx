@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutDashboard, Package, Boxes, FileText, Inbox, CheckCircle2, Loader2, LogOut, Menu } from 'lucide-react'
+import { LayoutDashboard, Package, Boxes, FileText, Inbox, CheckCircle2, Loader2, LogOut, Menu, ScrollText } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { AppSidebar } from '@/components/AppSidebar'
@@ -13,69 +13,55 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   if (!user) return null
 
-  const isAdmin          = user.role === 'admin'
-  const isLogistics      = user.role === 'logistics'
-  const isIngestion      = user.role === 'ingestion'
-  const isIngestionLead  = user.role === 'ingestion_lead'
+  const isAdmin           = user.role === 'admin'
+  const isLogistics       = user.role === 'logistics'
+  const isLogisticsLead   = user.role === 'logistics_lead'
+  const isIngestion       = user.role === 'ingestion'
+  const isIngestionLead   = user.role === 'ingestion_lead'
+  const canSeeLogs        = isAdmin || isIngestionLead || isLogisticsLead
 
   const roleBadge: Record<string, string> = {
-    admin:          'text-purple-700',
-    logistics:      'text-blue-700',
-    ingestion:      'text-green-700',
-    ingestion_lead: 'text-teal-700',
-    user:           'text-gray-600',
+    admin:           'text-purple-700',
+    logistics:       'text-blue-700',
+    logistics_lead:  'text-indigo-700',
+    ingestion:       'text-green-700',
+    ingestion_lead:  'text-teal-700',
+    user:            'text-gray-600',
   }
 
   const roleLabel: Record<string, string> = {
-    admin:          'Admin',
-    logistics:      'Logistics',
-    ingestion:      'Ingestion',
-    ingestion_lead: 'Ingestion Lead',
-    user:           'Viewer',
+    admin:           'Admin',
+    logistics:       'Logistics',
+    logistics_lead:  'Logistics Lead',
+    ingestion:       'Ingestion',
+    ingestion_lead:  'Ingestion Lead',
+    user:            'Viewer',
   }
 
   const navItems: NavItem[] = [
     // ── Admin ────────────────────────────────────────────────────────
-    ...(isAdmin
-      ? [{ href: '/', label: 'Dashboard', icon: <LayoutDashboard size={14} /> }]
-      : []),
-    ...(isAdmin
-      ? [{ href: '/logistics', label: 'SD Card Logistics', icon: <Package size={14} /> }]
-      : []),
-    ...(isAdmin
-      ? [{ href: '/collect-sdc', label: 'Collect SDC', icon: <Inbox size={14} /> }]
-      : []),
-    ...(isAdmin
-      ? [{ href: '/processing-queue', label: 'Processing Queue', icon: <Loader2 size={14} /> }]
-      : []),
-    ...(isAdmin
-      ? [{ href: '/completed', label: 'Completed', icon: <CheckCircle2 size={14} /> }]
-      : []),
-    ...(isAdmin
-      ? [{ href: '/inventory', label: 'Equipment Inventory', icon: <Boxes size={14} /> }]
-      : []),
-    ...(isAdmin
-      ? [{ href: '/report', label: 'Reports', icon: <FileText size={14} /> }]
-      : []),
+    ...(isAdmin ? [{ href: '/',                label: 'Dashboard',          icon: <LayoutDashboard size={14} /> }] : []),
+    ...(isAdmin ? [{ href: '/logistics',       label: 'SD Card Logistics',  icon: <Package size={14} /> }] : []),
+    ...(isAdmin ? [{ href: '/collect-sdc',     label: 'Collect SDC',        icon: <Inbox size={14} /> }] : []),
+    ...(isAdmin ? [{ href: '/processing-queue',label: 'Processing Queue',   icon: <Loader2 size={14} /> }] : []),
+    ...(isAdmin ? [{ href: '/completed',       label: 'Completed',          icon: <CheckCircle2 size={14} /> }] : []),
+    ...(isAdmin ? [{ href: '/inventory',       label: 'Equipment Inventory',icon: <Boxes size={14} /> }] : []),
+    ...(isAdmin ? [{ href: '/report',          label: 'Reports',            icon: <FileText size={14} /> }] : []),
+
+    // ── Logistics Lead ────────────────────────────────────────────────
+    ...(isLogisticsLead ? [{ href: '/logs', label: 'Activity Logs', icon: <ScrollText size={14} /> }] : []),
 
     // ── Ingestion Lead ────────────────────────────────────────────────
-    ...(isIngestionLead
-      ? [{ href: '/collect-sdc',      label: 'Collect SDC',      icon: <Inbox size={14} /> }]
-      : []),
-    ...(isIngestionLead
-      ? [{ href: '/processing-queue', label: 'Processing Queue', icon: <Loader2 size={14} /> }]
-      : []),
-    ...(isIngestionLead
-      ? [{ href: '/completed',        label: 'Completed',        icon: <CheckCircle2 size={14} /> }]
-      : []),
+    ...(isIngestionLead ? [{ href: '/collect-sdc',      label: 'Collect SDC',      icon: <Inbox size={14} /> }] : []),
+    ...(isIngestionLead ? [{ href: '/processing-queue', label: 'Processing Queue', icon: <Loader2 size={14} /> }] : []),
+    ...(isIngestionLead ? [{ href: '/completed',        label: 'Completed',        icon: <CheckCircle2 size={14} /> }] : []),
 
     // ── Ingestion (regular) ───────────────────────────────────────────
-    ...(isIngestion
-      ? [{ href: '/processing-queue', label: 'Processing Queue', icon: <Loader2 size={14} /> }]
-      : []),
-    ...(isIngestion
-      ? [{ href: '/completed',        label: 'Completed',        icon: <CheckCircle2 size={14} /> }]
-      : []),
+    ...(isIngestion ? [{ href: '/processing-queue', label: 'Processing Queue', icon: <Loader2 size={14} /> }] : []),
+    ...(isIngestion ? [{ href: '/completed',        label: 'Completed',        icon: <CheckCircle2 size={14} /> }] : []),
+
+    // ── Logs — visible to admin, ingestion_lead, logistics_lead ───────
+    ...(canSeeLogs && !isLogisticsLead ? [{ href: '/logs', label: 'Activity Logs', icon: <ScrollText size={14} /> }] : []),
   ]
 
   const sidebarHeader = (
