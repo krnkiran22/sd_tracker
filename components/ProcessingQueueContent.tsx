@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Loader2, CheckCircle, RefreshCw, Package, Factory,
   CalendarDays, User, UserCheck, Package2, Boxes, FileText,
@@ -47,6 +47,8 @@ export default function ProcessingQueueContent({ initialPackets }: { initialPack
       setLoading(false)
     }
   }, [])
+
+  useEffect(() => { fetchAll() }, [fetchAll])
 
   return (
     <div className="flex flex-col gap-5 max-w-3xl">

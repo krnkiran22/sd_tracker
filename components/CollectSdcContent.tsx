@@ -339,6 +339,8 @@ export default function CollectSdcContent({ initialPackets }: { initialPackets: 
     finally { setLoading(false) }
   }, [])
 
+  useEffect(() => { loadPackets() }, [loadPackets])
+
   if (!user || (user.role !== 'ingestion_lead' && user.role !== 'admin')) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">

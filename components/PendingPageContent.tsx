@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   Clock, Loader2, CheckCircle2, ChevronRight, X, RefreshCw, Search,
   Package2, Boxes, Factory, CalendarDays, User, Camera, ImagePlus, Trash2, Plus,
@@ -390,6 +390,9 @@ export default function PendingPageContent({ initialPackets }: { initialPackets:
     } catch { /* ignore */ }
     finally { setLoadingList(false) }
   }, [])
+
+  // Auto-refresh on mount to ensure data is current even if SSR timed out
+  useEffect(() => { loadPending() }, [loadPending])
 
   const filteredPending = search
     ? pending.filter(p => p.team_name.toLowerCase().includes(search.toLowerCase()))

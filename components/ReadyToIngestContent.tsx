@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
   CheckCircle2, Clock, Loader2, RefreshCw, Search, X,
   Package2, Boxes, Factory, CalendarDays, User, Inbox, ImageIcon,
@@ -205,6 +205,8 @@ export default function ReadyToIngestContent({ initialPackets }: { initialPacket
     } catch { /* ignore */ }
     finally { setLoading(false) }
   }, [])
+
+  useEffect(() => { loadPackets() }, [loadPackets])
 
   const displayed = packets
     .filter(p => {
