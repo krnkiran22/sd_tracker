@@ -20,6 +20,7 @@ export interface SdPacket {
   photo_url?: string | null
   photo_urls?: string | null
   repack_photo_urls?: string | null
+  factory_entries?: string | null   // JSON array of {factory_name, deployment_date} objects
   status: PacketStatus
   entered_by: string
   counted_by?: string | null
