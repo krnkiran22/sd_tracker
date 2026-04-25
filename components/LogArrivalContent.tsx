@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Package, X, Plus, Loader2, RefreshCw,
-  ChevronDown, ChevronUp, Search, SlidersHorizontal, Camera,
+  ChevronDown, ChevronUp, Search, SlidersHorizontal, Camera, ImageIcon,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -72,7 +72,8 @@ export default function LogArrivalContent({
   const [receivedBy, setReceivedBy]     = useState('')
 
   const [photoDataUrls, setPhotoDataUrls] = useState<string[]>([])
-  const photoInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef  = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
 
   const [submitting, setSubmitting]   = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -345,19 +346,36 @@ export default function LogArrivalContent({
                 Photos <span className="text-destructive">*</span>
               </label>
               <p className="text-[10px] text-muted-foreground mb-2">
-                Take a photo of the packet before logging. You can add multiple photos.
+                Take a photo of the packet or upload from your gallery. You can add multiple photos.
               </p>
+
+              {/* Camera input — opens camera directly */}
               <input
-                ref={photoInputRef} type="file" accept="image/*" capture="environment"
+                ref={cameraInputRef} type="file" accept="image/*" capture="environment"
                 multiple className="hidden" onChange={handlePhotoChange}
               />
-              <button
-                type="button" onClick={() => photoInputRef.current?.click()}
-                className="flex items-center gap-2 h-9 px-3 text-xs border border-dashed border-blue-400 rounded hover:border-blue-600 hover:bg-blue-50/60 transition-colors text-blue-600 font-medium"
-              >
-                <Camera size={13} />
-                {photoDataUrls.length > 0 ? 'Add More Photos' : 'Take / Upload Photo'}
-              </button>
+              {/* Gallery input — opens file picker / gallery */}
+              <input
+                ref={galleryInputRef} type="file" accept="image/*"
+                multiple className="hidden" onChange={handlePhotoChange}
+              />
+
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  type="button" onClick={() => cameraInputRef.current?.click()}
+                  className="flex items-center gap-2 h-9 px-3 text-xs border border-dashed border-blue-400 rounded hover:border-blue-600 hover:bg-blue-50/60 transition-colors text-blue-600 font-medium"
+                >
+                  <Camera size={13} />
+                  {photoDataUrls.length > 0 ? 'Take More' : 'Take Photo'}
+                </button>
+                <button
+                  type="button" onClick={() => galleryInputRef.current?.click()}
+                  className="flex items-center gap-2 h-9 px-3 text-xs border border-dashed border-violet-400 rounded hover:border-violet-600 hover:bg-violet-50/60 transition-colors text-violet-600 font-medium"
+                >
+                  <ImageIcon size={13} />
+                  {photoDataUrls.length > 0 ? 'Add from Gallery' : 'Upload from Gallery'}
+                </button>
+              </div>
               {photoDataUrls.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {photoDataUrls.map((url, idx) => (
