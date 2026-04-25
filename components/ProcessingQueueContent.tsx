@@ -28,7 +28,7 @@ function parseFactoryEntries(p: SdPacket): FactoryEntry[] {
 
 export default function ProcessingQueueContent({ initialPackets }: { initialPackets: SdPacket[] }) {
   const [packets, setPackets]       = useState<SdPacket[]>(initialPackets)
-  const [loading, setLoading]       = useState(false)
+  const [loading, setLoading]       = useState(initialPackets.length === 0)
   const [activeForm, setActiveForm] = useState<number | null>(null)
 
   const fetchAll = useCallback(async () => {

@@ -377,7 +377,8 @@ function CountRepackModal({
 // ── Page content ───────────────────────────────────────────────────────────────
 export default function PendingPageContent({ initialPackets }: { initialPackets: LogisticsPacket[] }) {
   const [pending, setPending]               = useState<LogisticsPacket[]>(initialPackets)
-  const [loadingList, setLoadingList]       = useState(false)
+  // Start loading if SSR had nothing (cold-start timeout) so we never show a false "All clear!"
+  const [loadingList, setLoadingList]       = useState(initialPackets.length === 0)
   const [selectedPacket, setSelectedPacket] = useState<LogisticsPacket | null>(null)
   const [search, setSearch]                 = useState('')
 

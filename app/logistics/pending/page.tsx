@@ -6,7 +6,7 @@ async function getPendingPackets(): Promise<LogisticsPacket[]> {
   try {
     const res = await fetch(`${BACKEND}/api/packets?status=received_at_hq`, {
       cache: 'no-store',
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(3000),
     })
     if (!res.ok) return []
     const data = await res.json()

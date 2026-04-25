@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import AuthProvider from '@/components/AuthProvider'
+import WarmupPinger from '@/components/WarmupPinger'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} h-full`}>
       <body className="h-full antialiased font-sans bg-background text-foreground">
+        <WarmupPinger />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

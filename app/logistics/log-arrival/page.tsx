@@ -5,8 +5,8 @@ const BACKEND = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '')
 async function fetchInitialData(): Promise<{ teams: TeamInfo[]; packets: LogisticsPacket[] }> {
   try {
     const [teamsRes, packetsRes] = await Promise.all([
-      fetch(`${BACKEND}/api/teams`,   { cache: 'no-store', signal: AbortSignal.timeout(4000) }),
-      fetch(`${BACKEND}/api/packets`, { cache: 'no-store', signal: AbortSignal.timeout(4000) }),
+      fetch(`${BACKEND}/api/teams`,   { cache: 'no-store', signal: AbortSignal.timeout(3000) }),
+      fetch(`${BACKEND}/api/packets`, { cache: 'no-store', signal: AbortSignal.timeout(3000) }),
     ])
     const teams   = teamsRes.ok   ? await teamsRes.json()   : []
     const packets = packetsRes.ok ? await packetsRes.json() : []

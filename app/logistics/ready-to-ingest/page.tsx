@@ -6,7 +6,7 @@ async function getReadyPackets(): Promise<ReadyPacket[]> {
   try {
     const res = await fetch(
       `${BACKEND}/api/packets?statuses=counted_and_repacked,collected_for_ingestion`,
-      { cache: 'no-store', signal: AbortSignal.timeout(4000) }
+      { cache: 'no-store', signal: AbortSignal.timeout(3000) }
     )
     if (!res.ok) return []
     const data = await res.json()

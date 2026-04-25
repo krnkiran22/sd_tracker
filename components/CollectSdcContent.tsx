@@ -315,7 +315,7 @@ export default function CollectSdcContent({ initialPackets }: { initialPackets: 
   const { user }                          = useAuth()
   const router                            = useRouter()
   const [packets, setPackets]             = useState<ReadyPacket[]>(initialPackets)
-  const [loading, setLoading]             = useState(false)
+  const [loading, setLoading]             = useState(initialPackets.length === 0)
   const [search, setSearch]               = useState('')
   const [filterStatus, setFilterStatus]   = useState<'all' | 'ready' | 'collected'>('all')
   const [collectTarget, setCollectTarget] = useState<ReadyPacket | null>(null)

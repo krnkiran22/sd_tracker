@@ -7,7 +7,7 @@ async function getQueuePackets(): Promise<SdPacket[]> {
   try {
     const res = await fetch(
       `${BACKEND}/api/packets?statuses=collected_for_ingestion,processing`,
-      { cache: 'no-store', signal: AbortSignal.timeout(4000) }
+      { cache: 'no-store', signal: AbortSignal.timeout(3000) }
     )
     if (!res.ok) return []
     const data = await res.json()
