@@ -12,7 +12,7 @@ import IngestionForm from '@/components/IngestionForm'
 import type { SdPacket } from '@/lib/types'
 import { apiUrl } from '@/lib/api'
 
-interface FactoryEntry { factory_name: string; deployment_date: string | null }
+interface FactoryEntry { factory_name: string; deployment_date: string | null; count?: number }
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -139,6 +139,13 @@ export default function ProcessingQueueContent({ initialPackets }: { initialPack
                             <span className="text-muted-foreground">Deployment:</span>
                             <span className="font-semibold text-foreground">{formatDate(f.deployment_date)}</span>
                           </div>
+                          {f.count != null && f.count > 0 && (
+                            <div className="flex items-center gap-2 text-[12px] pl-5">
+                              <Package size={12} className="text-muted-foreground shrink-0" />
+                              <span className="text-muted-foreground">SD Cards:</span>
+                              <span className="font-semibold text-foreground">{f.count}</span>
+                            </div>
+                          )}
                         </div>
                       ))}
                       <div className="flex items-center gap-2 text-[12px] pt-1.5 border-t border-border/50">

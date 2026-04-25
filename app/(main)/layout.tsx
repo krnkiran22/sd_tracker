@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutDashboard, Package, Boxes, FileText, Inbox, CheckCircle2, Loader2, LogOut, Menu, ScrollText } from 'lucide-react'
+import { LayoutDashboard, Package, Boxes, FileText, Inbox, CheckCircle2, Loader2, LogOut, Menu, ScrollText, Clock } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { AppSidebar } from '@/components/AppSidebar'
@@ -49,7 +49,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     ...(isAdmin ? [{ href: '/report',          label: 'Reports',            icon: <FileText size={14} /> }] : []),
 
     // ── Logistics Lead ────────────────────────────────────────────────
-    ...(isLogisticsLead ? [{ href: '/logs', label: 'Activity Logs', icon: <ScrollText size={14} /> }] : []),
+    ...(isLogisticsLead ? [{ href: '/logistics/log-arrival',     label: 'Log New Arrival',        icon: <Package size={14} /> }] : []),
+    ...(isLogisticsLead ? [{ href: '/logistics/pending',         label: 'Pending Count & Repack', icon: <Clock size={14} /> }] : []),
+    ...(isLogisticsLead ? [{ href: '/logistics/ready-to-ingest', label: 'Ready to Ingest',        icon: <Inbox size={14} /> }] : []),
+    ...(isLogisticsLead ? [{ href: '/logs',                      label: 'Activity Logs',          icon: <ScrollText size={14} /> }] : []),
 
     // ── Ingestion Lead ────────────────────────────────────────────────
     ...(isIngestionLead ? [{ href: '/collect-sdc',      label: 'Collect SDC',      icon: <Inbox size={14} /> }] : []),

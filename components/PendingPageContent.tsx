@@ -27,6 +27,7 @@ export interface LogisticsPacket {
 interface FactoryEntry {
   factory_name: string
   deployment_date: string
+  count: string  // number of SD cards from this specific factory/deployment
 }
 
 function timeSince(dateStr: string) {
@@ -57,10 +58,9 @@ function CountRepackModal({
   onSuccess: () => void
 }) {
   const { user } = useAuth()
-  const [sdCardCount,    setSdCardCount]    = useState(String(packet.sd_card_count || ''))
   const [numPackages,    setNumPackages]    = useState('')
   const [factoryEntries, setFactoryEntries] = useState<FactoryEntry[]>([
-    { factory_name: packet.factory || '', deployment_date: '' },
+    { factory_name: packet.factory || '', deployment_date: '', count: String(packet.sd_card_count || '') },
   ])
   const [conditionNotes, setConditionNotes] = useState('')
   const [countedBy,      setCountedBy]      = useState('')
@@ -73,8 +73,11 @@ function CountRepackModal({
 
   const extraCounters = user?.name && !COUNTERS.includes(user.name) ? [user.name] : []
 
+  // Total SD cards auto-computed from sum of per-factory counts
+  const totalFromFactories = factoryEntries.reduce((sum, e) => sum + (Number(e.count) || 0), 0)
+
   const addFactoryEntry = () =>
-    setFactoryEntries(prev => [...prev, { factory_name: '', deployment_date: '' }])
+    setFactoryEntries(prev => [...prev, { factory_name: '', deployment_date: '', count: '' }])
 
   const removeFactoryEntry = (idx: number) =>
     setFactoryEntries(prev => prev.filter((_, i) => i !== idx))
@@ -102,19 +105,23 @@ function CountRepackModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!sdCardCount || Number(sdCardCount) <= 0) {
-      setError('Enter the total SD card count.'); return
-    }
     if (!numPackages || Number(numPackages) <= 0) {
       setError('Enter the number of packages.'); return
     }
     for (let i = 0; i < factoryEntries.length; i++) {
-      if (!factoryEntries[i].factory_name.trim()) {
+      const fe = factoryEntries[i]
+      if (!fe.factory_name.trim()) {
         setError(`Enter factory name for entry ${i + 1}.`); return
       }
-      if (!factoryEntries[i].deployment_date) {
+      if (!fe.deployment_date) {
         setError(`Select deployment date for entry ${i + 1}.`); return
       }
+      if (!fe.count || Number(fe.count) <= 0) {
+        setError(`Enter SD card count for factory ${i + 1}.`); return
+      }
+    }
+    if (totalFromFactories <= 0) {
+      setError('Total SD card count must be greater than 0.'); return
     }
     if (!countedBy) { setError('Select who is counting.'); return }
     if (photoUrls.length === 0) { setError('Add at least one photo of the packed items.'); return }
@@ -127,13 +134,14 @@ function CountRepackModal({
         body: JSON.stringify({
           event_type: 'counted_and_repacked',
           event_data: {
-            sd_card_count:    Number(sdCardCount),
+            sd_card_count:    totalFromFactories,
             num_packages:     Number(numPackages),
             factory_name:     factoryEntries[0].factory_name.trim(),
             deployment_date:  factoryEntries[0].deployment_date,
             factory_entries:  factoryEntries.map(e => ({
               factory_name:    e.factory_name.trim(),
               deployment_date: e.deployment_date,
+              count:           Number(e.count),
             })),
             condition_notes:  conditionNotes.trim() || null,
             counted_by:       countedBy,
@@ -179,18 +187,8 @@ function CountRepackModal({
         {/* Scrollable form */}
         <form onSubmit={handleSubmit} className="px-5 py-4 flex flex-col gap-4 overflow-y-auto">
 
-          {/* SD Card Count + Num Packages */}
+          {/* Num Packages + computed total */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
-                <Package2 size={11} /> Total SD Cards <span className="text-destructive">*</span>
-              </label>
-              <Input
-                type="number" min={1} value={sdCardCount}
-                onChange={e => setSdCardCount(e.target.value)}
-                placeholder="e.g. 90" className="h-11 text-base" autoFocus
-              />
-            </div>
             <div>
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
                 <Boxes size={11} /> No. of Packages <span className="text-destructive">*</span>
@@ -198,8 +196,19 @@ function CountRepackModal({
               <Input
                 type="number" min={1} value={numPackages}
                 onChange={e => setNumPackages(e.target.value)}
-                placeholder="e.g. 3" className="h-11 text-base"
+                placeholder="e.g. 3" className="h-11 text-base" autoFocus
               />
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
+                <Package2 size={11} /> Total SD Cards
+              </label>
+              <div className={`h-11 border rounded-md px-3 flex items-center text-base font-semibold select-none ${
+                totalFromFactories > 0 ? 'border-green-300 bg-green-50 text-green-700' : 'border-input bg-muted/50 text-muted-foreground'
+              }`}>
+                {totalFromFactories > 0 ? totalFromFactories : '—'}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">Auto-sum of factory counts</p>
             </div>
           </div>
 
@@ -246,9 +255,9 @@ function CountRepackModal({
                 <p className="text-[10px] font-semibold text-muted-foreground">
                   {factoryEntries.length > 1 ? `Factory ${idx + 1}` : 'Factory'}
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] text-muted-foreground mb-1 block">Name</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="sm:col-span-1">
+                    <label className="text-[10px] text-muted-foreground mb-1 block">Factory Name</label>
                     <Input
                       type="text"
                       value={entry.factory_name}
@@ -257,13 +266,23 @@ function CountRepackModal({
                       className="h-9 text-sm"
                     />
                   </div>
-                  <div>
+                  <div className="sm:col-span-1">
                     <label className="text-[10px] text-muted-foreground mb-1 block">Deployment Date</label>
                     <input
                       type="date"
                       value={entry.deployment_date}
                       onChange={e => updateFactoryEntry(idx, 'deployment_date', e.target.value)}
                       className="w-full h-9 border border-input bg-background px-3 text-sm rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                  </div>
+                  <div className="sm:col-span-1">
+                    <label className="text-[10px] text-muted-foreground mb-1 block">SD Card Count</label>
+                    <Input
+                      type="number" min={1}
+                      value={entry.count}
+                      onChange={e => updateFactoryEntry(idx, 'count', e.target.value)}
+                      placeholder="e.g. 45"
+                      className="h-9 text-sm"
                     />
                   </div>
                 </div>

@@ -2,38 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Package, Clock, Boxes, FileText, Inbox, LogOut, Menu } from 'lucide-react'
+import { Package, Clock, Boxes, FileText, Inbox, LogOut, Menu, ScrollText } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { AppSidebar } from '@/components/AppSidebar'
+import type { NavItem } from '@/components/AppSidebar'
 
-const navItems = [
-  {
-    href: '/logistics/log-arrival',
-    label: 'Log New Arrival',
-    icon: <Package size={14} />,
-  },
-  {
-    href: '/logistics/pending',
-    label: 'Pending Count & Repack',
-    icon: <Clock size={14} />,
-  },
-  {
-    href: '/logistics/ready-to-ingest',
-    label: 'Ready to Ingest',
-    icon: <Inbox size={14} />,
-  },
-  {
-    href: '/logistics/inventory',
-    label: 'Equipment Inventory',
-    icon: <Boxes size={14} />,
-  },
-  {
-    href: '/logistics/report',
-    label: 'Reports',
-    icon: <FileText size={14} />,
-  },
+const LOGISTICS_PAGES: NavItem[] = [
+  { href: '/logistics/log-arrival',     label: 'Log New Arrival',       icon: <Package size={14} /> },
+  { href: '/logistics/pending',         label: 'Pending Count & Repack', icon: <Clock size={14} /> },
+  { href: '/logistics/ready-to-ingest', label: 'Ready to Ingest',       icon: <Inbox size={14} /> },
+  { href: '/logistics/inventory',       label: 'Equipment Inventory',   icon: <Boxes size={14} /> },
+  { href: '/logistics/report',          label: 'Reports',               icon: <FileText size={14} /> },
 ]
+
+const LOGS_LINK: NavItem = { href: '/logs', label: 'Activity Logs', icon: <ScrollText size={14} /> }
+
+const ALLOWED = ['logistics', 'logistics_lead', 'admin']
 
 export default function LogisticsLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth()
@@ -41,18 +26,28 @@ export default function LogisticsLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
-    if (user && user.role !== 'logistics' && user.role !== 'admin') {
+    if (user && !ALLOWED.includes(user.role)) {
       router.replace('/')
     }
   }, [user, router])
 
   if (!user) return null
 
+  const isLogisticsLead = user.role === 'logistics_lead'
+
+  const navItems: NavItem[] = [
+    ...LOGISTICS_PAGES,
+    ...(isLogisticsLead ? [LOGS_LINK] : []),
+  ]
+
+  const roleLabelColor = isLogisticsLead ? 'text-indigo-700' : 'text-blue-700'
+  const roleLabel      = isLogisticsLead ? 'Logistics Lead' : 'Logistics'
+
   // ── Sidebar header: app title + user info ──────────────────────────────────
   const sidebarHeader = (
     <div className="flex flex-col gap-1">
       <span className="text-xs font-semibold tracking-tight">Build AI Tracker</span>
-      <span className="text-[10px] font-semibold text-blue-700">Logistics</span>
+      <span className={`text-[10px] font-semibold ${roleLabelColor}`}>{roleLabel}</span>
       <span className="text-[10px] text-muted-foreground mt-1 truncate">{user.name}</span>
     </div>
   )

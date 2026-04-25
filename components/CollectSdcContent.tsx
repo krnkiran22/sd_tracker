@@ -31,7 +31,7 @@ export interface ReadyPacket {
   created_at: string
 }
 
-interface FactoryEntry { factory_name: string; deployment_date: string | null }
+interface FactoryEntry { factory_name: string; deployment_date: string | null; count?: number }
 
 function fmtDate(d: string | null) {
   if (!d) return '—'
@@ -133,11 +133,18 @@ function CollectModal({
                   <span className="text-muted-foreground min-w-[80px]">Deployment:</span>
                   <span className="font-semibold">{fmtDate(f.deployment_date)}</span>
                 </div>
+                {f.count != null && f.count > 0 && (
+                  <div className="flex items-center gap-2 pl-5">
+                    <Package2 size={12} className="text-muted-foreground" />
+                    <span className="text-muted-foreground min-w-[80px]">SD Cards:</span>
+                    <span className="font-semibold">{f.count}</span>
+                  </div>
+                )}
               </div>
             ))}
             <div className="flex items-center gap-2">
               <Package2 size={12} className="text-muted-foreground" />
-              <span className="text-muted-foreground min-w-[80px]">SD Cards:</span>
+              <span className="text-muted-foreground min-w-[80px]">Total:</span>
               <span className="font-semibold">{packet.sd_card_count} cards · {packet.num_packages} packages</span>
             </div>
           </div>
@@ -234,6 +241,13 @@ function PacketCard({ packet, onCollect }: { packet: ReadyPacket; onCollect: (p:
                     <span className="text-muted-foreground">Deployment:</span>
                     <span className="font-semibold text-foreground">{fmtDate(f.deployment_date)}</span>
                   </div>
+                  {f.count != null && f.count > 0 && (
+                    <div className="flex items-center gap-2 text-[12px] pl-5">
+                      <Package2 size={12} className="text-muted-foreground shrink-0" />
+                      <span className="text-muted-foreground">SD Cards:</span>
+                      <span className="font-semibold text-foreground">{f.count}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
