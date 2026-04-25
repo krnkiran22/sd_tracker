@@ -63,7 +63,7 @@ function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
   )
 }
 
-const INGESTION_PEOPLE = ['Asalam', 'Karthikeyan', 'Nikhil', 'Saba', 'Amit', 'Sameer']
+interface IngestionUser { id: number; name: string; email: string; role: string }
 
 // ── Collect modal ──────────────────────────────────────────────────────────────
 function CollectModal({
@@ -71,10 +71,23 @@ function CollectModal({
 }: {
   packet: ReadyPacket; collectorName: string; onClose: () => void; onSuccess: () => void
 }) {
-  const [assignedTo, setAssignedTo] = useState('')
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState('')
-  const factories                   = parseFactoryEntries(packet)
+  const [assignedTo, setAssignedTo]         = useState('')
+  const [loading, setLoading]               = useState(false)
+  const [error, setError]                   = useState('')
+  const [ingestionUsers, setIngestionUsers] = useState<IngestionUser[]>([])
+  const [usersLoading, setUsersLoading]     = useState(true)
+  const factories                           = parseFactoryEntries(packet)
+
+  // Load real ingestion users from DB on modal open
+  useEffect(() => {
+    fetch(apiUrl('/api/admin/users?roles=ingestion,ingestion_lead'), { cache: 'no-store' })
+      .then(r => r.json())
+      .then((data: IngestionUser[]) => {
+        if (Array.isArray(data)) setIngestionUsers(data)
+      })
+      .catch(() => {})
+      .finally(() => setUsersLoading(false))
+  }, [])
 
   const handleCollect = async () => {
     if (!assignedTo) { setError('Please assign this packet to an ingestion person.'); return }
@@ -154,20 +167,31 @@ function CollectModal({
             <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
               <UserCheck size={11} /> Assign to Ingestion Person <span className="text-destructive">*</span>
             </label>
-            <div className="grid grid-cols-2 gap-2">
-              {INGESTION_PEOPLE.map(name => (
-                <button
-                  key={name} type="button" onClick={() => setAssignedTo(name)}
-                  className={`h-10 rounded-lg border text-sm font-medium transition-all ${
-                    assignedTo === name
-                      ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
-                      : 'bg-background border-border text-muted-foreground hover:border-teal-400 hover:text-foreground'
-                  }`}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
+            {usersLoading ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground py-3">
+                <Loader2 size={12} className="animate-spin" /> Loading team…
+              </div>
+            ) : ingestionUsers.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">No ingestion users found in the system.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {ingestionUsers.map(u => (
+                  <button
+                    key={u.id} type="button" onClick={() => setAssignedTo(u.name)}
+                    className={`h-10 rounded-lg border text-sm font-medium transition-all text-left px-3 flex flex-col justify-center ${
+                      assignedTo === u.name
+                        ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
+                        : 'bg-background border-border text-muted-foreground hover:border-teal-400 hover:text-foreground'
+                    }`}
+                  >
+                    <span className="truncate">{u.name}</span>
+                    {u.role === 'ingestion_lead' && (
+                      <span className={`text-[9px] font-normal ${assignedTo === u.name ? 'text-teal-100' : 'text-muted-foreground'}`}>Lead</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2 text-[11px] bg-teal-50 border border-teal-100 rounded-md px-3 py-2">
