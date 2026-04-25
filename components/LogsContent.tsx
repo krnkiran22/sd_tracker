@@ -141,8 +141,8 @@ export default function LogsContent({ initialEvents }: Props) {
           {filtered.length} events
         </Badge>
         <Button
-          variant="ghost" size="icon"
-          className="ml-auto h-7 w-7 text-muted-foreground hover:text-foreground"
+          variant="ghost" size="sm"
+          className="ml-auto h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
           onClick={loadEvents}
           disabled={loading}
         >
