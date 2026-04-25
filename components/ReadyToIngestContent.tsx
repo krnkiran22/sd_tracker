@@ -197,7 +197,7 @@ export default function ReadyToIngestContent({ initialPackets }: { initialPacket
     setLoading(true)
     try {
       const res = await fetch(
-        apiUrl('/api/packets?statuses=counted_and_repacked,collected_for_ingestion'),
+        apiUrl('/api/packets?statuses=counted_and_repacked,collected_for_ingestion&repack_photos=1'),
         { cache: 'no-store' }
       )
       const d = await res.json()
