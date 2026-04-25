@@ -27,7 +27,8 @@ export interface LogisticsPacket {
 interface FactoryEntry {
   factory_name: string
   deployment_date: string
-  count: string  // number of SD cards from this specific factory/deployment
+  count: string    // SD cards received from this factory
+  missing: string  // missing SD cards from this factory (logistics record only)
 }
 
 function timeSince(dateStr: string) {
@@ -60,7 +61,7 @@ function CountRepackModal({
   const { user } = useAuth()
   const [numPackages,    setNumPackages]    = useState('')
   const [factoryEntries, setFactoryEntries] = useState<FactoryEntry[]>([
-    { factory_name: packet.factory || '', deployment_date: '', count: String(packet.sd_card_count || '') },
+    { factory_name: packet.factory || '', deployment_date: '', count: String(packet.sd_card_count || ''), missing: '' },
   ])
   const [conditionNotes, setConditionNotes] = useState('')
   const [countedBy,      setCountedBy]      = useState('')
@@ -77,7 +78,7 @@ function CountRepackModal({
   const totalFromFactories = factoryEntries.reduce((sum, e) => sum + (Number(e.count) || 0), 0)
 
   const addFactoryEntry = () =>
-    setFactoryEntries(prev => [...prev, { factory_name: '', deployment_date: '', count: '' }])
+    setFactoryEntries(prev => [...prev, { factory_name: '', deployment_date: '', count: '', missing: '' }])
 
   const removeFactoryEntry = (idx: number) =>
     setFactoryEntries(prev => prev.filter((_, i) => i !== idx))
@@ -142,6 +143,7 @@ function CountRepackModal({
               factory_name:    e.factory_name.trim(),
               deployment_date: e.deployment_date,
               count:           Number(e.count),
+              missing:         Number(e.missing) || 0,
             })),
             condition_notes:  conditionNotes.trim() || null,
             counted_by:       countedBy,
@@ -255,8 +257,8 @@ function CountRepackModal({
                 <p className="text-[10px] font-semibold text-muted-foreground">
                   {factoryEntries.length > 1 ? `Factory ${idx + 1}` : 'Factory'}
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <div className="sm:col-span-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="col-span-2">
                     <label className="text-[10px] text-muted-foreground mb-1 block">Factory Name</label>
                     <Input
                       type="text"
@@ -266,7 +268,7 @@ function CountRepackModal({
                       className="h-9 text-sm"
                     />
                   </div>
-                  <div className="sm:col-span-1">
+                  <div className="col-span-2">
                     <label className="text-[10px] text-muted-foreground mb-1 block">Deployment Date</label>
                     <input
                       type="date"
@@ -275,7 +277,7 @@ function CountRepackModal({
                       className="w-full h-9 border border-input bg-background px-3 text-sm rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
-                  <div className="sm:col-span-1">
+                  <div>
                     <label className="text-[10px] text-muted-foreground mb-1 block">SD Card Count</label>
                     <Input
                       type="number" min={1}
@@ -283,6 +285,19 @@ function CountRepackModal({
                       onChange={e => updateFactoryEntry(idx, 'count', e.target.value)}
                       placeholder="e.g. 45"
                       className="h-9 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground mb-1 block flex items-center gap-1">
+                      Missing Count
+                      <span className="text-[9px] text-amber-600 font-semibold">(logistics only)</span>
+                    </label>
+                    <Input
+                      type="number" min={0}
+                      value={entry.missing}
+                      onChange={e => updateFactoryEntry(idx, 'missing', e.target.value)}
+                      placeholder="e.g. 3"
+                      className="h-9 text-sm border-amber-200 focus:ring-amber-400"
                     />
                   </div>
                 </div>

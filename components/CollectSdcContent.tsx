@@ -31,7 +31,7 @@ export interface ReadyPacket {
   created_at: string
 }
 
-interface FactoryEntry { factory_name: string; deployment_date: string | null; count?: number }
+interface FactoryEntry { factory_name: string; deployment_date: string | null; count?: number; missing?: number }
 
 function fmtDate(d: string | null) {
   if (!d) return '—'

@@ -12,7 +12,7 @@ import IngestionForm from '@/components/IngestionForm'
 import type { SdPacket } from '@/lib/types'
 import { apiUrl } from '@/lib/api'
 
-interface FactoryEntry { factory_name: string; deployment_date: string | null; count?: number }
+interface FactoryEntry { factory_name: string; deployment_date: string | null; count?: number; missing?: number }
 
 function formatDate(d: string | null) {
   if (!d) return '—'

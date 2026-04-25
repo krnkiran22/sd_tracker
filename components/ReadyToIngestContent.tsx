@@ -27,7 +27,7 @@ export interface ReadyPacket {
   created_at: string
 }
 
-interface FactoryEntry { factory_name: string; deployment_date: string | null; count?: number }
+interface FactoryEntry { factory_name: string; deployment_date: string | null; count?: number; missing?: number }
 
 function fmtDate(d: string | null) {
   if (!d) return '—'
@@ -123,6 +123,13 @@ function PacketCard({ packet }: { packet: ReadyPacket }) {
                       <Package2 size={12} className="text-muted-foreground shrink-0" />
                       <span className="text-muted-foreground">SD Cards:</span>
                       <span className="font-semibold text-foreground">{f.count}</span>
+                    </div>
+                  )}
+                  {f.missing != null && f.missing > 0 && (
+                    <div className="flex items-center gap-2 text-[12px] pl-5">
+                      <span className="w-3 h-3 rounded-full bg-amber-400 shrink-0" />
+                      <span className="text-muted-foreground">Missing:</span>
+                      <span className="font-semibold text-amber-600">{f.missing}</span>
                     </div>
                   )}
                 </div>
