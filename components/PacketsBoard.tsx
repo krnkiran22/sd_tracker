@@ -8,9 +8,12 @@ import type { SdPacket, PacketStatus } from '@/lib/types'
 import { apiUrl } from '@/lib/api'
 
 const STATUS_CONFIG: Record<PacketStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  received:   { label: 'Received',   color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-200',   icon: <Package size={12} /> },
-  processing: { label: 'Processing', color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200',     icon: <Loader2 size={12} className="animate-spin" /> },
-  completed:  { label: 'Completed',  color: 'text-green-700',  bg: 'bg-green-50 border-green-200',   icon: <CheckCircle size={12} /> },
+  received:                { label: 'Received',           color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-200',  icon: <Package size={12} /> },
+  processing:              { label: 'Processing',         color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200',    icon: <Loader2 size={12} className="animate-spin" /> },
+  completed:               { label: 'Completed',          color: 'text-green-700',  bg: 'bg-green-50 border-green-200',  icon: <CheckCircle size={12} /> },
+  received_at_hq:          { label: 'Received at HQ',     color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-200',  icon: <Package size={12} /> },
+  counted_and_repacked:    { label: 'Counted & Repacked', color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200',    icon: <CheckCircle size={12} /> },
+  collected_for_ingestion: { label: 'Collected',          color: 'text-teal-700',   bg: 'bg-teal-50 border-teal-200',   icon: <CheckCircle size={12} /> },
 }
 
 function formatDate(d: string) {
