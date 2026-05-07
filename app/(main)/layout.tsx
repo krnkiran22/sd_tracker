@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutDashboard, Package, Boxes, FileText, Inbox, CheckCircle2, Loader2, LogOut, Menu, ScrollText, Clock } from 'lucide-react'
+import { LayoutDashboard, Package, Boxes, FileText, Inbox, CheckCircle2, Loader2, LogOut, Menu, ScrollText, Clock, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { AppSidebar } from '@/components/AppSidebar'
@@ -47,6 +47,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     ...(isAdmin ? [{ href: '/completed',       label: 'Completed',          icon: <CheckCircle2 size={14} /> }] : []),
     ...(isAdmin ? [{ href: '/inventory',       label: 'Equipment Inventory',icon: <Boxes size={14} /> }] : []),
     ...(isAdmin ? [{ href: '/report',          label: 'Reports',            icon: <FileText size={14} /> }] : []),
+    ...(isAdmin ? [{ href: '/whatsapp',        label: 'WhatsApp',           icon: <MessageCircle size={14} /> }] : []),
 
     // ── Logistics Lead ────────────────────────────────────────────────
     ...(isLogisticsLead ? [{ href: '/logistics/log-arrival',     label: 'Log New Arrival',        icon: <Package size={14} /> }] : []),
